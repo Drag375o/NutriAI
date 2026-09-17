@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/theme/colors.dart';
 import '../../app/theme/spacing.dart';
 import '../../app/theme/typography.dart';
+import '../../features/auth/state/auth_controller.dart';
 
 /// Stand-in for a screen not yet built.
 ///
 /// Written as a real empty state rather than "coming soon", so the copy
 /// carries over when the feature lands.
-class PlaceholderScreen extends StatelessWidget {
+class PlaceholderScreen extends ConsumerWidget {
   const PlaceholderScreen({
     super.key,
     required this.title,
@@ -25,9 +27,10 @@ class PlaceholderScreen extends StatelessWidget {
   final String? phase;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final p = context.palette;
     final text = Theme.of(context).textTheme;
+    final user = ref.watch(authControllerProvider).user;
 
     return SafeArea(
       child: Center(
@@ -48,6 +51,28 @@ class PlaceholderScreen extends StatelessWidget {
                 Text(title, style: text.displayMedium),
                 const SizedBox(height: AppSpacing.lg),
                 Text(message, style: text.bodyLarge),
+
+                // Temporary, until the Profile screen exists in Phase 9.
+                if (user != null) ...[
+                  const SizedBox(height: AppSpacing.xxxl),
+                  Divider(color: p.hair),
+                  const SizedBox(height: AppSpacing.lg),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Signed in as ${user.name}',
+                          style: text.bodySmall,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () =>
+                            ref.read(authControllerProvider.notifier).logout(),
+                        child: const Text('Sign out'),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),

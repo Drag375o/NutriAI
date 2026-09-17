@@ -10,15 +10,13 @@ class NutriAIApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mode = ref.watch(themeModeProvider);
-
     return MaterialApp.router(
       title: 'NutriAI',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      themeMode: mode,
-      routerConfig: appRouter,
+      themeMode: ref.watch(themeModeProvider),
+      routerConfig: ref.watch(routerProvider),
     );
   }
 }
