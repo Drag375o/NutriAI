@@ -30,7 +30,7 @@ def init_db() -> None:
     Fine while the schema is still moving. Alembic migrations arrive once
     real data exists and recreating tables stops being free.
     """
-    from app.models import user  # noqa: F401  (registers the model)
+    from app.models import profile, user  # noqa: F401  (registers the models)
 
     Base.metadata.create_all(bind=engine)
 
