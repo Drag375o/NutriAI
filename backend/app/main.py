@@ -1,16 +1,28 @@
 """NutriAI backend entry point."""
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import health
+from app.api.routes import auth, health
 from app.core.config import settings
+from app.db.session import init_db
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Runs once before the server accepts requests.
+    init_db()
+    yield
+
 
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
-    description="Local-first nutrition and health API.",
+    description="Nutrition and health API.",
     docs_url="/docs" if settings.is_development else None,
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -22,6 +34,7 @@ app.add_middleware(
 )
 
 app.include_router(health.router, prefix=settings.API_V1_PREFIX)
+app.include_router(auth.router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/")

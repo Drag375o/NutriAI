@@ -26,6 +26,14 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: str = "*"
 
+    # Auth. JWT_SECRET signs every token: if it leaks, logins can be forged.
+    JWT_SECRET: str = ""
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRE_DAYS: int = 7
+
+    # Required by the create_admin script. A development convenience only.
+    ADMIN_CREATION_SECRET: str = ""
+
     AI_PROVIDER: str = "groq"
     GROQ_API_KEY: str = ""
     GROQ_MODEL: str = "llama-3.3-70b-versatile"
