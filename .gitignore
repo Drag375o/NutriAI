@@ -31,3 +31,6 @@ frontend/windows/flutter/ephemeral/
 *.iml
 Thumbs.db
 desktop.ini
+
+# Personal working notes
+HANDOFF.md
