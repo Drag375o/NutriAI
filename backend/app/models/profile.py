@@ -49,3 +49,12 @@ class Profile(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=_now, onupdate=_now
     )
+
+    @property
+    def daily_calories_available(self) -> bool:
+        """Whether a calorie target can be computed from what is stored.
+
+        Used to decide whether asking about calories is a sensible
+        suggestion, without recalculating the number here.
+        """
+        return bool(self.height_cm and self.weight_kg and self.age)

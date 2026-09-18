@@ -50,4 +50,12 @@ class ChatRepository {
     final body = await _api.get('/chat/status');
     return AIStatus.fromJson(body);
   }
+
+  /// Opening questions, chosen by the backend from the user's profile.
+  Future<List<String>> suggestions() async {
+    final rows = await _api.getList('/chat/suggestions');
+    return rows.cast<String>();
+  }
+
+
 }

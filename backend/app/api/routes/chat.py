@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.ai.context import user_context
+from app.ai.prompts import suggestions as suggestion_prompts
 from app.ai.providers.base import AIProviderError, ChatMessage
 from app.ai.service import AIService
 from app.api.dependencies import current_user
@@ -34,6 +35,19 @@ async def ai_status(user: User = Depends(current_user)) -> AIStatus:
         model=_service.model,
         available=await _service.is_available(),
     )
+
+
+@router.get("/chat/suggestions", response_model=list[str])
+def chat_suggestions(
+    user: User = Depends(current_user), db: Session = Depends(get_db)
+) -> list[str]:
+    """Opening questions suited to this person's profile.
+
+    Lives on the backend so the rules sit beside the context builder rather
+    than being duplicated in Dart.
+    """
+    profile = profile_repo.get_or_create(db, user.id)
+    return suggestion_prompts.build(profile)
 
 
 @router.post("/chat", response_model=ChatResponse)

@@ -13,6 +13,14 @@ final conversationsProvider = FutureProvider<List<Conversation>>(
   (ref) => ref.watch(chatRepositoryProvider).listConversations(),
 );
 
+/// Opening questions for the empty state and the dashboard.
+///
+/// Kept separate from ChatState so it survives starting a new conversation
+/// and is fetched once rather than on every message.
+final suggestionsProvider = FutureProvider<List<String>>(
+  (ref) => ref.watch(chatRepositoryProvider).suggestions(),
+);
+
 class ChatState {
   const ChatState({
     this.conversationId,

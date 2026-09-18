@@ -8,6 +8,8 @@ import '../state/chat_controller.dart';
 import '../widgets/conversation_list.dart';
 import '../widgets/message_bubble.dart';
 
+import '../widgets/suggestion_chips.dart';
+
 class CoachScreen extends ConsumerStatefulWidget {
   const CoachScreen({super.key});
 
@@ -131,11 +133,17 @@ class _ChatPane extends ConsumerWidget {
             ),
           ),
 
+
+
         Expanded(
           child: chat.loading
               ? const Center(child: CircularProgressIndicator())
               : chat.isEmpty
-                  ? const _EmptyState()
+                  ? _EmptyState(
+                      onSelected: (question) => ref
+                          .read(chatControllerProvider.notifier)
+                          .send(question),
+                    )
                   : ListView.builder(
                       controller: scroll,
                       padding: const EdgeInsets.all(AppSpacing.xxl),
@@ -146,6 +154,9 @@ class _ChatPane extends ConsumerWidget {
                       },
                     ),
         ),
+
+
+
 
         if (chat.error != null)
           Container(
@@ -243,6 +254,7 @@ class _Composer extends StatelessWidget {
   }
 }
 
+
 /// Shown while waiting for a reply. A moving line rather than a percentage,
 /// since we cannot know how far along the model is (section 46).
 class _Thinking extends StatelessWidget {
@@ -273,17 +285,19 @@ class _Thinking extends StatelessWidget {
   }
 }
 
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
+class _EmptyState extends ConsumerWidget {
+  const _EmptyState({required this.onSelected});
+
+  final ValueChanged<String> onSelected;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final text = Theme.of(context).textTheme;
 
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 460),
-        child: Padding(
+        constraints: const BoxConstraints(maxWidth: 560),
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppSpacing.xxl),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -297,6 +311,8 @@ class _EmptyState extends StatelessWidget {
                 'yourself.',
                 style: text.bodyLarge,
               ),
+              const SizedBox(height: AppSpacing.xxl),
+              SuggestionChips(onSelected: onSelected),
             ],
           ),
         ),
