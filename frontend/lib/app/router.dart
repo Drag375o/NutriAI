@@ -9,6 +9,8 @@ import '../features/health/screens/health_screen.dart';
 import '../features/onboarding/screens/onboarding_screen.dart';
 import '../features/shell/app_shell.dart';
 
+import '../features/today/screens/today_screen.dart';
+
 /// Bridges Riverpod and go_router: the router re-evaluates its redirect
 /// whenever auth state changes.
 class _AuthListenable extends ChangeNotifier {
@@ -59,14 +61,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: '/today',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: PlaceholderScreen(
-                phase: 'PHASE 6',
-                title: 'Today',
-                message: 'Your weight, BMI, and the day\'s plan at a glance, '
-                    'with one place to ask NutriAI anything.',
-              ),
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: TodayScreen()),
           ),
           GoRoute(
             path: '/plan',
