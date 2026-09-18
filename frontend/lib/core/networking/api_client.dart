@@ -55,9 +55,43 @@ class ApiClient {
             body: jsonEncode(body ?? {}),
           ));
 
+  Future<void> delete(String path) => _send(
+        () => _http.delete(Uri.parse(ApiConfig.url(path)), headers: _headers),
+      );
+
+  /// For endpoints that return a bare JSON array rather than an object.
+  ///
+  /// Separate from [_send] because that decodes into a Map, and a top-level
+  /// array cannot be cast to one.
+  Future<List<dynamic>> getList(String path) async {
+    late http.Response response;
+
+    try {
+      response = await _http
+          .get(Uri.parse(ApiConfig.url(path)), headers: _headers)
+          .timeout(ApiConfig.timeout);
+    } on TimeoutException {
+      throw ApiException.timeout();
+    } catch (_) {
+      throw ApiException.network();
+    }
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      if (response.body.isEmpty) return const [];
+      return jsonDecode(response.body) as List<dynamic>;
+    }
+
+    throw ApiException(
+      'Could not load that.',
+      statusCode: response.statusCode,
+    );
+  }
+
   /// Runs a request and normalises every outcome into either a decoded
   /// body or an ApiException carrying a readable message.
-  Future<Map<String, dynamic>> _send(Future<http.Response> Function() request) async {
+  Future<Map<String, dynamic>> _send(
+    Future<http.Response> Function() request,
+  ) async {
     late http.Response response;
 
     try {
