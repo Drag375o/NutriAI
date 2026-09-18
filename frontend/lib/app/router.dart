@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../core/widgets/placeholder_screen.dart';
 import '../features/auth/screens/login_screen.dart';
 import '../features/auth/state/auth_controller.dart';
+import '../features/health/screens/health_screen.dart';
+import '../features/onboarding/screens/onboarding_screen.dart';
 import '../features/shell/app_shell.dart';
 
 /// Bridges Riverpod and go_router: the router re-evaluates its redirect
@@ -27,8 +29,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       final auth = ref.read(authControllerProvider);
       final atLogin = state.matchedLocation == '/login';
 
-      // Still restoring a stored token: hold position rather than
-      // flashing the login screen at someone who is signed in.
+      // Still restoring a stored token: hold position rather than flashing
+      // the login screen at someone who is signed in.
       if (auth.status == AuthStatus.checking) return null;
 
       if (auth.status == AuthStatus.signedOut) {
@@ -43,6 +45,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) =>
             const NoTransitionPage(child: LoginScreen()),
       ),
+
+      // Outside the shell on purpose: onboarding is a focused flow, so the
+      // navigation rail would only offer ways to abandon it.
+      GoRoute(
+        path: '/onboarding',
+        pageBuilder: (context, state) =>
+            const NoTransitionPage(child: OnboardingScreen()),
+      ),
+
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),
         routes: [
@@ -50,7 +61,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/today',
             pageBuilder: (context, state) => const NoTransitionPage(
               child: PlaceholderScreen(
-                phase: 'PHASE 5',
+                phase: 'PHASE 6',
                 title: 'Today',
                 message: 'Your weight, BMI, and the day\'s plan at a glance, '
                     'with one place to ask NutriAI anything.',
@@ -61,7 +72,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/plan',
             pageBuilder: (context, state) => const NoTransitionPage(
               child: PlaceholderScreen(
-                phase: 'PHASE 7',
+                phase: 'PHASE 8',
                 title: 'Plan',
                 message: 'Meals built around your goal, your preferences, and '
                     'the food you actually eat.',
@@ -72,7 +83,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/coach',
             pageBuilder: (context, state) => const NoTransitionPage(
               child: PlaceholderScreen(
-                phase: 'PHASE 6',
+                phase: 'PHASE 7',
                 title: 'Coach',
                 message: 'Ask NutriAI about your meals, goals, or nutrition. '
                     'Every conversation is saved here.',
@@ -83,7 +94,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/progress',
             pageBuilder: (context, state) => const NoTransitionPage(
               child: PlaceholderScreen(
-                phase: 'PHASE 8',
+                phase: 'PHASE 9',
                 title: 'Progress',
                 message: 'Start tracking your weight to see how it moves over '
                     'time, against the goal you set.',
@@ -92,20 +103,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/health',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: PlaceholderScreen(
-                phase: 'PHASE 5',
-                title: 'Health',
-                message: 'Your measurements, BMI, and the health information '
-                    'NutriAI uses to personalise its advice.',
-              ),
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: HealthScreen()),
           ),
           GoRoute(
             path: '/profile',
             pageBuilder: (context, state) => const NoTransitionPage(
               child: PlaceholderScreen(
-                phase: 'PHASE 9',
+                phase: 'PHASE 10',
                 title: 'Profile',
                 message: 'Personal details, dietary preferences, appearance, '
                     'and what happens to your data.',
