@@ -27,7 +27,15 @@ class User(Base):
     role: Mapped[str] = mapped_column(String(16), default="user", index=True)
 
     # Deactivated accounts cannot log in, but their data is preserved.
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Set by an administrator; a user cannot clear this themselves.
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)    
+
+    # When the user paused their own account. Cleared when they sign back
+    # in and choose to restore it. Kept separate from is_active so that a
+    # user reactivating themselves cannot undo an administrator's ban.
+    deactivated_at: Mapped[datetime | None] = mapped_column(
+        DateTime, nullable=True
+    )
 
     # Set when an admin resets a password; forces a change at next login.
     must_change_password: Mapped[bool] = mapped_column(Boolean, default=False)

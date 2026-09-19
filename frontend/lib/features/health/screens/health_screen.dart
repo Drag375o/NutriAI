@@ -7,6 +7,7 @@ import '../../../app/theme/spacing.dart';
 import '../../../app/theme/typography.dart';
 import '../../profile/data/profile_models.dart';
 import '../../profile/state/profile_controller.dart';
+import '../../progress/widgets/log_weight_sheet.dart';
 
 class HealthScreen extends ConsumerWidget {
   const HealthScreen({super.key});
@@ -108,12 +109,24 @@ class HealthScreen extends ConsumerWidget {
               _Row('Allergies', data.allergies),
 
               const SizedBox(height: AppSpacing.xl),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: OutlinedButton(
-                  onPressed: () => context.go('/onboarding'),
-                  child: const Text('Update my details'),
-                ),
+              Wrap(
+                spacing: AppSpacing.md,
+                runSpacing: AppSpacing.md,
+                children: [
+                  // Weight is logged here rather than in Profile: it is a
+                  // measurement that changes, not an attribute of the person.
+                  ElevatedButton(
+                    onPressed: () => showLogWeightSheet(
+                      context,
+                      currentWeight: data.weightKg,
+                    ),
+                    child: const Text('Record weight'),
+                  ),
+                  OutlinedButton(
+                    onPressed: () => context.go('/onboarding'),
+                    child: const Text('Update my details'),
+                  ),
+                ],
               ),
               const SizedBox(height: AppSpacing.huge),
             ],

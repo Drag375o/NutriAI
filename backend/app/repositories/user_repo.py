@@ -56,3 +56,23 @@ def list_all(db: Session, limit: int = 100, offset: int = 0) -> list[User]:
 
 def count(db: Session) -> int:
     return len(list(db.scalars(select(User.id))))
+
+def deactivate(db: Session, user: User) -> None:
+    """Pause the account. Data is untouched."""
+    user.deactivated_at = datetime.now(timezone.utc)
+    db.commit()
+
+
+def reactivate(db: Session, user: User) -> None:
+    user.deactivated_at = None
+    db.commit()
+
+
+def delete(db: Session, user: User) -> None:
+    """Remove the account and everything it owns.
+
+    Profiles, conversations, plans and weight entries all cascade from the
+    foreign keys, so this one statement clears the lot.
+    """
+    db.delete(user)
+    db.commit()

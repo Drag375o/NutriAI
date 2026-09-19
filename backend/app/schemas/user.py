@@ -35,6 +35,7 @@ class UserRead(BaseModel):
     role: str
     is_active: bool
     must_change_password: bool
+    deactivated_at: datetime | None = None    
     created_at: datetime
     last_login_at: datetime | None
 
@@ -43,3 +44,21 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserRead
+
+
+class AccountAction(BaseModel):
+    """Deleting requires the password, which proves identity rather than
+    just testing whether someone can click."""
+
+    password: str
+
+
+class DeactivatedResponse(BaseModel):
+    """Returned when someone signs in to a paused account.
+
+    A distinct shape rather than a plain error, so the app can offer to
+    restore rather than only reporting a failure.
+    """
+
+    detail: str = "This account is deactivated."
+    deactivated: bool = True

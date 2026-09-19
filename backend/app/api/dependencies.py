@@ -28,7 +28,7 @@ def _user_from_token(token: str, db: Session) -> User:
         raise _UNAUTHORIZED
 
     user = user_repo.get_by_id(db, int(payload["sub"]))
-    if user is None or not user.is_active:
+    if user is None or not user.is_active or user.deactivated_at is not None:
         raise _UNAUTHORIZED
 
     return user
