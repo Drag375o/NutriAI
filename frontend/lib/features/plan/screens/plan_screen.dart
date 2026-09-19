@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/theme/colors.dart';
 import '../../../app/theme/spacing.dart';
 import '../../../app/theme/typography.dart';
+import '../../auth/state/auth_controller.dart';
 import '../data/plan_models.dart';
 import '../state/plan_controller.dart';
 import '../widgets/meal_row.dart';
@@ -30,6 +32,18 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     setState(() => _noteOpen = false);
   }
 
+  /// Opens the PDF endpoint as a plain navigation, which is how a browser
+  /// download works. The token rides in the query string because a
+  /// navigation cannot carry an Authorization header.
+  Future<void> _download() async {
+    final plan = ref.read(planControllerProvider).plan;
+    final token = ref.read(apiClientProvider).token;
+    if (plan == null || token == null) return;
+
+    final url = ref.read(planRepositoryProvider).pdfUrl(plan.id);
+    await launchUrl(Uri.parse('$url?token=$token'));
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(planControllerProvider);
@@ -52,6 +66,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                 noteController: _note,
                 onToggleNote: () => setState(() => _noteOpen = !_noteOpen),
                 onGenerate: _generate,
+                onDownload: _download,
               ),
 
               if (state.error != null) ...[
@@ -87,6 +102,7 @@ class _Header extends StatelessWidget {
     required this.noteController,
     required this.onToggleNote,
     required this.onGenerate,
+    required this.onDownload,
   });
 
   final DietPlan? plan;
@@ -95,6 +111,7 @@ class _Header extends StatelessWidget {
   final TextEditingController noteController;
   final VoidCallback onToggleNote;
   final VoidCallback onGenerate;
+  final VoidCallback onDownload;
 
   @override
   Widget build(BuildContext context) {
@@ -134,6 +151,12 @@ class _Header extends StatelessWidget {
               onPressed: generating ? null : onToggleNote,
               child: Text(noteOpen ? 'Hide note' : 'Add a note'),
             ),
+            // Only offered once there is something to export.
+            if (plan != null)
+              TextButton(
+                onPressed: generating ? null : onDownload,
+                child: const Text('Download PDF'),
+              ),
           ],
         ),
 
@@ -145,7 +168,8 @@ class _Header extends StatelessWidget {
             style: text.bodyLarge,
             decoration: const InputDecoration(
               labelText: 'Anything to steer it',
-              hintText: 'e.g. something quick, no fish, I only have rice and eggs',
+              hintText:
+                  'e.g. something quick, no fish, I only have rice and eggs',
             ),
           ),
         ],
@@ -388,10 +412,7 @@ class _Generating extends StatelessWidget {
         const SizedBox(height: AppSpacing.lg),
         Text('Building your day…', style: text.bodyLarge),
         const SizedBox(height: AppSpacing.xs),
-        Text(
-          'This takes a few seconds.',
-          style: text.bodySmall,
-        ),
+        Text('This takes a few seconds.', style: text.bodySmall),
       ],
     );
   }

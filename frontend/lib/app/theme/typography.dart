@@ -28,6 +28,19 @@ abstract final class AppTypography {
         height: 1.2,
       );
 
+  /// Script accent. Used sparingly — a greeting, an occasional food moment.
+  /// Never for anything the reader has to work through.
+  static TextStyle script({
+    required Color color,
+    double size = 34,
+  }) {
+    return GoogleFonts.sacramento(
+      color: color,
+      fontSize: size,
+      height: 1.1,
+    );
+  }
+
   static TextTheme textTheme(AppPalette palette) {
     final base = GoogleFonts.archivoTextTheme();
 

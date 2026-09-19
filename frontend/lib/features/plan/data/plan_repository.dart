@@ -1,5 +1,7 @@
 import '../../../core/networking/api_client.dart';
 import 'plan_models.dart';
+import '../../../core/constants/api_config.dart';
+
 
 class PlanRepository {
   const PlanRepository(this._api);
@@ -28,4 +30,13 @@ class PlanRepository {
   }
 
   Future<void> delete(int id) => _api.delete('/diet-plans/$id');
+
+
+  /// The download URL for a plan's PDF.
+  ///
+  /// The token goes in a query parameter because a browser download is a
+  /// plain navigation and cannot carry an Authorization header. The endpoint
+  /// still verifies it and still checks ownership.
+  String pdfUrl(int planId) => ApiConfig.url('/diet-plans/$planId/pdf');
+
 }

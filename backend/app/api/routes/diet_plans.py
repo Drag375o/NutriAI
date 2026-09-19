@@ -7,16 +7,22 @@ from sqlalchemy.orm import Session
 
 from app.ai.context import user_context
 from app.ai.service import AIService
-from app.api.dependencies import current_user
+from app.api.dependencies import current_user, current_user_from_query
 from app.db.session import get_db
 from app.models.user import User
 from app.repositories import diet_plan_repo, profile_repo
 from app.schemas.diet_plan import DietPlanRead, DietPlanSummary, GenerateRequest
+
 from app.services import diet_plan_service
 from app.services.health_calc import (
     calculate_bmr,
     calculate_daily_calories,
 )
+
+from fastapi.responses import Response
+
+from app.services import pdf_service
+
 
 router = APIRouter(prefix="/diet-plans", tags=["diet plans"])
 
@@ -110,6 +116,33 @@ def read_plan(
             detail="That plan does not exist.",
         )
     return DietPlanRead.model_validate(plan)
+
+@router.get("/{plan_id}/pdf")
+def download_plan(
+    plan_id: int,
+    # Query-parameter auth, because a browser download is a plain
+    # navigation and cannot carry an Authorization header.
+    user: User = Depends(current_user_from_query),
+    db: Session = Depends(get_db),
+) -> Response:
+    """The plan as a downloadable PDF."""
+    plan = diet_plan_repo.get_owned(db, plan_id, user.id)
+    if plan is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="That plan does not exist.",
+        )
+
+    pdf = pdf_service.render_plan(plan, name=user.name)
+    filename = f"nutriai-plan-{plan.plan_date.isoformat()}.pdf"
+
+    return Response(
+        content=pdf,
+        media_type="application/pdf",
+        # attachment rather than inline, so the browser saves it rather
+        # than opening a viewer tab.
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.delete("/{plan_id}", status_code=204)

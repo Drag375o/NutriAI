@@ -95,10 +95,20 @@ class _Greeting extends StatelessWidget {
           _formatDate(now).toUpperCase(),
           style: AppTypography.mono(color: p.muted, size: 11),
         ),
-        const SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: AppSpacing.md),
+
+        // Greeting plain, name in script — the personal detail gets the
+        // warmer face.
         Text(
-          name.isEmpty ? _partOfDay(now.hour) : '${_partOfDay(now.hour)}, $name',
-          style: text.displayMedium,
+          '${_partOfDay(now.hour)},',
+          style: text.headlineMedium,
+        ),
+        Transform.translate(
+          offset: const Offset(0, -2),
+          child: Text(
+            name.isEmpty ? 'there' : name,
+            style: AppTypography.script(color: p.turmericText, size: 46),
+          ),
         ),
       ],
     );

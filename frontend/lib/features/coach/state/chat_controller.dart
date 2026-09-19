@@ -8,18 +8,24 @@ final chatRepositoryProvider = Provider<ChatRepository>(
   (ref) => ChatRepository(ref.watch(apiClientProvider)),
 );
 
-/// The list of past conversations. Refreshed after each new one starts.
-final conversationsProvider = FutureProvider<List<Conversation>>(
-  (ref) => ref.watch(chatRepositoryProvider).listConversations(),
-);
+/// The list of past conversations.
+///
+/// Watches auth so the cache is dropped when the session changes. Without
+/// this, one user's conversation titles stay on screen after another signs
+/// in — the backend scopes correctly, but Riverpod would keep the old result.
+final conversationsProvider = FutureProvider<List<Conversation>>((ref) {
+  ref.watch(authControllerProvider);
+  return ref.watch(chatRepositoryProvider).listConversations();
+});
 
 /// Opening questions for the empty state and the dashboard.
 ///
 /// Kept separate from ChatState so it survives starting a new conversation
 /// and is fetched once rather than on every message.
-final suggestionsProvider = FutureProvider<List<String>>(
-  (ref) => ref.watch(chatRepositoryProvider).suggestions(),
-);
+final suggestionsProvider = FutureProvider<List<String>>((ref) {
+  ref.watch(authControllerProvider);
+  return ref.watch(chatRepositoryProvider).suggestions();
+});
 
 class ChatState {
   const ChatState({

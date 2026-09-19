@@ -1,6 +1,6 @@
 """Shared route dependencies: who is calling, and may they."""
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Query, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
@@ -18,6 +18,22 @@ _UNAUTHORIZED = HTTPException(
 )
 
 
+def _user_from_token(token: str, db: Session) -> User:
+    """Verify a token and return its user, or raise 401.
+
+    Shared by both entry points so the checks cannot drift apart.
+    """
+    payload = decode_access_token(token)
+    if payload is None or "sub" not in payload:
+        raise _UNAUTHORIZED
+
+    user = user_repo.get_by_id(db, int(payload["sub"]))
+    if user is None or not user.is_active:
+        raise _UNAUTHORIZED
+
+    return user
+
+
 def current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
     db: Session = Depends(get_db),
@@ -30,15 +46,21 @@ def current_user(
     if credentials is None:
         raise _UNAUTHORIZED
 
-    payload = decode_access_token(credentials.credentials)
-    if payload is None or "sub" not in payload:
-        raise _UNAUTHORIZED
+    return _user_from_token(credentials.credentials, db)
 
-    user = user_repo.get_by_id(db, int(payload["sub"]))
-    if user is None or not user.is_active:
-        raise _UNAUTHORIZED
 
-    return user
+def current_user_from_query(
+    token: str = Query(..., description="Access token"),
+    db: Session = Depends(get_db),
+) -> User:
+    """The signed-in user, from a query parameter rather than a header.
+
+    Only for browser downloads, which cannot set an Authorization header.
+    The token is still verified and ownership is still checked; the tradeoff
+    is that it appears in browser history and server logs, so this is used
+    nowhere else.
+    """
+    return _user_from_token(token, db)
 
 
 def current_admin(user: User = Depends(current_user)) -> User:
