@@ -73,6 +73,16 @@ class AIService:
         )
 
     @property
+    def provider(self) -> AIProvider:
+        """Direct access for callers that build their own message list.
+
+        Diet plan generation needs a different system prompt and lower
+        temperature than conversational chat, so it assembles its own
+        request rather than going through ask().
+        """
+        return self._provider    
+
+    @property
     def provider_name(self) -> str:
         return self._provider.name
 
