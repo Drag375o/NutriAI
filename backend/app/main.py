@@ -13,6 +13,8 @@ from app.api.routes import auth, chat, health, profile
 
 from app.api.routes import auth, chat, diet_plans, health, profile
 
+from app.api.routes import auth, chat, diet_plans, health, profile, weights
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Runs once before the server accepts requests.
@@ -41,6 +43,8 @@ app.include_router(auth.router, prefix=settings.API_V1_PREFIX)
 app.include_router(profile.router, prefix=settings.API_V1_PREFIX)
 app.include_router(chat.router, prefix=settings.API_V1_PREFIX)
 app.include_router(diet_plans.router, prefix=settings.API_V1_PREFIX)
+app.include_router(weights.router, prefix=settings.API_V1_PREFIX)
+
 
 @app.get("/")
 def root() -> dict:
