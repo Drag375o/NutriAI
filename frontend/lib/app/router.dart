@@ -17,6 +17,8 @@ import '../features/plan/screens/plan_screen.dart';
 
 import '../features/progress/screens/progress_screen.dart';
 
+import '../features/settings/screens/profile_screen.dart';
+
 /// Bridges Riverpod and go_router: the router re-evaluates its redirect
 /// whenever auth state changes.
 class _AuthListenable extends ChangeNotifier {
@@ -97,15 +99,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           
           GoRoute(
             path: '/profile',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: PlaceholderScreen(
-                phase: 'PHASE 10',
-                title: 'Profile',
-                message: 'Personal details, dietary preferences, appearance, '
-                    'and what happens to your data.',
-              ),
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: ProfileScreen()),
           ),
+
         ],
       ),
     ],

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/colors.dart';
 import '../../../app/theme/spacing.dart';
-import '../../../app/theme/typography.dart';
 import '../state/auth_controller.dart';
 import '../widgets/auth_scaffold.dart';
 
@@ -39,7 +38,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final auth = ref.read(authControllerProvider.notifier);
 
     final ok = _registering
-        ? await auth.register(_email.text.trim(), _name.text.trim(), _password.text)
+        ? await auth.register(
+            _email.text.trim(), _name.text.trim(), _password.text)
         : await auth.login(_email.text.trim(), _password.text);
 
     if (mounted) setState(() => _busy = false);
@@ -47,11 +47,73 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (!ok && mounted) FocusScope.of(context).unfocus();
   }
 
+  /// Offered when the credentials were correct but the account is paused.
+  /// Restoring is an explicit choice rather than a side effect of signing
+  /// in, so nobody reactivates an account they meant to leave closed.
+  Future<void> _offerReactivation() async {
+    final p = context.palette;
+
+    final restore = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: p.paper,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          side: BorderSide(color: p.hair),
+          borderRadius: BorderRadius.circular(AppRadii.md),
+        ),
+        title: Text(
+          'This account is deactivated',
+          style: TextStyle(
+            color: p.ink,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: Text(
+          'Would you like to restore it and sign in?',
+          style: TextStyle(color: p.char, fontSize: 15, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: p.char),
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Not now'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: p.emberText),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              'Restore my account',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (restore != true || !mounted) return;
+
+    setState(() => _busy = true);
+    await ref.read(authControllerProvider.notifier).reactivate(
+          _email.text.trim(),
+          _password.text,
+        );
+    if (mounted) setState(() => _busy = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
     final text = Theme.of(context).textTheme;
     final error = ref.watch(authControllerProvider).error;
+
+    // A paused account is offered restoration rather than shown an error.
+    ref.listen(authControllerProvider, (previous, next) {
+      if (next.deactivated && !(previous?.deactivated ?? false)) {
+        _offerReactivation();
+      }
+    });
 
     return AuthScaffold(
       child: Form(
@@ -130,7 +192,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 helperText: _registering ? 'At least 8 characters.' : null,
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                    _obscure
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
                     size: 20,
                     color: p.muted,
                   ),

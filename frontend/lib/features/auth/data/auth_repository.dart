@@ -43,4 +43,20 @@ class AuthRepository {
     await _api.setToken(body['access_token'] as String);
     return AuthUser.fromJson(body['user'] as Map<String, dynamic>);
   }
+
+  /// Restores a paused account and signs in.
+  ///
+  /// Credentials are sent again rather than carried over from the failed
+  /// login, because the server verifies them independently.
+  Future<AuthUser> reactivate({
+    required String email,
+    required String password,
+  }) async {
+    final body = await _api.post('/auth/reactivate', body: {
+      'email': email,
+      'password': password,
+    });
+    return _acceptSession(body);
+  }
+
 }
