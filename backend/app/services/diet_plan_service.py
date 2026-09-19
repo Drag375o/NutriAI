@@ -49,17 +49,25 @@ def _extract_json(text: str) -> dict:
     except json.JSONDecodeError:
         pass
 
-    # Fall back to the outermost braces, which survives leading prose.
     start = cleaned.find("{")
     end = cleaned.rfind("}")
-    if start == -1 or end <= start:
+
+    # An opening brace with no matching close means the reply was cut off
+    # mid-object: a token limit, not a malformed response. Worth saying so,
+    # because the advice differs.
+    if start != -1 and end <= start:
+        raise DietPlanError(
+            "The plan came back incomplete. Try again, or add a note asking "
+            "for something simpler."
+        )
+
+    if start == -1:
         raise DietPlanError("The AI did not return a usable plan. Try again.")
 
     try:
         return json.loads(cleaned[start : end + 1])
     except json.JSONDecodeError:
         raise DietPlanError("The AI did not return a usable plan. Try again.")
-
 
 def _validate(plan: GeneratedPlan, target: int) -> None:
     """Reject plans that are unsafe or do not meet the target.
@@ -100,7 +108,7 @@ async def generate(
         # Lower temperature than chat: this is structured output, and
         # creativity here mostly produces malformed JSON.
         result = await service.provider.complete(
-            messages, max_tokens=1600, temperature=0.4
+            messages, max_tokens=2500, temperature=0.4
         )
     except AIProviderError as e:
         raise DietPlanError(e.message)

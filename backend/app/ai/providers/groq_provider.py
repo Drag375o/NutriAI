@@ -45,7 +45,7 @@ class GroqProvider(AIProvider):
         self,
         messages: list[ChatMessage],
         *,
-        max_tokens: int = 1024,
+        max_tokens: int = 3500,
         temperature: float = 0.6,
     ) -> ChatResult:
         if not self._api_key:
