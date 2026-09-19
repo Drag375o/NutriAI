@@ -8,6 +8,9 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.core.config import PROJECT_ROOT, settings
 from app.db.base import Base
 
+from sqlalchemy import create_engine, event
+from sqlalchemy.engine import Engine
+
 # Resolve the SQLite path against the project root rather than the working
 # directory, so the database is found wherever uvicorn is started from.
 _url = settings.DATABASE_URL
@@ -20,6 +23,17 @@ engine = create_engine(
     connect_args={"check_same_thread": False} if _url.startswith("sqlite") else {},
     echo=False,
 )
+
+# SQLite ships with foreign key enforcement disabled, per connection. Without
+# this, ON DELETE CASCADE is silently ignored and deleting a user leaves its
+# profile, plans, conversations and weight entries orphaned in the database.
+if _url.startswith("sqlite"):
+
+    @event.listens_for(Engine, "connect")
+    def _enable_foreign_keys(dbapi_connection, connection_record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
 
 SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
 
