@@ -391,3 +391,39 @@ and it is not.
 
 **Tests.** The honest gap. `health_calc.py` is pure functions with no
 dependencies and should have had tests from the first day.
+
+
+---
+
+## 21. A landing page, and what changed with it
+
+**Decided:** after everything else was built.
+
+The application opened straight onto a login form. That is correct for
+someone returning and wrong for everyone else: a stranger arriving at the
+address had no way to find out what this was before being asked for an
+email.
+
+So `/` is now a front page and `initialLocation` moved from `/today` to it.
+Signed out, the landing page and the login form are both reachable and
+everything else redirects to the front page; signed in, both redirect to
+Today.
+
+**The hero is a drifting particle field**, drawn with `CustomPaint` against
+a `Ticker`. Points wander, join with lines when they come within about a
+hundred pixels, and push away from the pointer. It was chosen over three
+alternatives: a stock photograph, which would have said nothing; a hand-drawn
+food illustration, which was mocked up and rejected as too literal; and a
+WebGL hero from a JavaScript library, which would have meant an
+`HtmlElementView` and a JS interop layer for one decorative element.
+
+A `Ticker` rather than a repeating timer, so the animation stops when the
+route is not visible and costs nothing in a background tab.
+
+**The sample panel shows real components, not a screenshot.** Numbers are
+invented, but the layout is built from the same widgets the dashboard uses,
+so it cannot drift out of date the way an image would.
+
+**The claims are on the front page, not behind a link.** Where the data
+lives, that nothing is advertised against, that deleting an account deletes
+everything. A commitment nobody reads is not a commitment.

@@ -114,6 +114,15 @@ follow-up questions like "what about something lighter?" resolve correctly.
 
 ## Features
 
+### Front page
+
+- **A landing page** at `/` explaining what the application does before
+  asking for an email
+- **An animated hero** — a field of drifting points that connect to their
+  neighbours and part around the pointer, drawn directly rather than pulled
+  from a package
+- **The privacy claims are on it**, not buried behind a policy link
+
 ### Accounts and access
 
 - **Registration and login**, with sessions that survive a refresh
@@ -208,6 +217,10 @@ on the dashboard greeting. All four are bundled rather than fetched.
 
 **Shape** — near-square corners throughout, with one signature move: primary
 buttons have two opposite corners cut flat, like a stamped label.
+
+**The landing hero is drawn, not photographed.** A particle field in
+`CustomPaint`, pointer-reactive, in the same two accent colours as
+everything else. No stock imagery anywhere in the application.
 
 **One deliberate exception.** The Health screen is a bento grid of raised,
 rounded tiles, sized against the viewport so it fills the pane on a desktop
@@ -465,10 +478,7 @@ For medical concerns, consult a qualified healthcare professional.
 - [x] Prescription reading with on-device OCR
 - [x] Alembic migrations
 - [x] Bundled fonts and offline support
-- [ ] A test suite
-- [ ] Windows, Android and iOS builds
-- [ ] Local AI via Ollama
-- [ ] Food database covering South Asian and Bengali foods
+- [x] Landing page with an animated hero
 
 ---
 
@@ -489,14 +499,6 @@ first day.
 
 **SQLite** is fine for one machine. A deployment with real concurrency would
 want PostgreSQL, which the repository layer is already shaped for.
-
----
-
-## Acknowledgements
-
-A rebuild and substantial rethink of an earlier Django project,
-[FitWell](https://github.com/minhaz-42/FitWell-Using-Django), sharing its
-feature concepts but none of its code, architecture or visual design.
 
 ---
 
