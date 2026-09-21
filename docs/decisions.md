@@ -381,9 +381,11 @@ worse than none. Only *conditions* would be kept and used — reasoning about
 medication is outside what this application should do, however accurate the
 extraction.
 
-**Onboarding prefill.** Editing details currently means re-entering them.
-Health's inline editing covers the common cases, so this is lower value than
-it looks.
+**Onboarding prefill.** Not built, and now unnecessary. Onboarding is a
+first-run flow: a new account is sent there from the login screen, and
+every field it collects is editable afterwards from Health with a single
+tap. Prefilling would only matter if onboarding were the editing route,
+and it is not.
 
 **Tests.** The honest gap. `health_calc.py` is pure functions with no
 dependencies and should have had tests from the first day.
