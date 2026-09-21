@@ -38,21 +38,17 @@ if _url.startswith("sqlite"):
 SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
 
 
+
 def init_db() -> None:
-    """Create any missing tables. Called once at startup.
+    """Confirm the database is reachable.
 
-    Fine while the schema is still moving. Alembic migrations arrive once
-    real data exists and recreating tables stops being free.
+    Table creation is Alembic's job now: `alembic upgrade head`. Leaving
+    create_all() here would silently build a schema no migration
+    describes, which is the situation Alembic exists to prevent.
     """
-    from app.models import (  # noqa: F401
-        conversation,
-        diet_plan,
-        profile,
-        user,
-        weight_entry,
-    )
+    with engine.connect() as connection:
+        connection.exec_driver_sql("SELECT 1")
 
-    Base.metadata.create_all(bind=engine)
 
 
 def get_db() -> Generator[Session, None, None]:
