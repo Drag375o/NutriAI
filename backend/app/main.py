@@ -5,15 +5,18 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import auth, health, profile
+from app.api.routes import (
+    admin,
+    auth,
+    chat,
+    diet_plans,
+    health,
+    profile,
+    weights,
+)
 from app.core.config import settings
 from app.db.session import init_db
 
-from app.api.routes import auth, chat, health, profile
-
-from app.api.routes import auth, chat, diet_plans, health, profile
-
-from app.api.routes import auth, chat, diet_plans, health, profile, weights
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -44,6 +47,7 @@ app.include_router(profile.router, prefix=settings.API_V1_PREFIX)
 app.include_router(chat.router, prefix=settings.API_V1_PREFIX)
 app.include_router(diet_plans.router, prefix=settings.API_V1_PREFIX)
 app.include_router(weights.router, prefix=settings.API_V1_PREFIX)
+app.include_router(admin.router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/")

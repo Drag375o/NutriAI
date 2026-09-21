@@ -19,6 +19,8 @@ import '../features/progress/screens/progress_screen.dart';
 
 import '../features/settings/screens/profile_screen.dart';
 
+import '../features/admin/screens/admin_screen.dart';
+
 /// Bridges Riverpod and go_router: the router re-evaluates its redirect
 /// whenever auth state changes.
 class _AuthListenable extends ChangeNotifier {
@@ -56,6 +58,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             const NoTransitionPage(child: LoginScreen()),
       ),
 
+
       // Outside the shell on purpose: onboarding is a focused flow, so the
       // navigation rail would only offer ways to abandon it.
       GoRoute(
@@ -63,6 +66,25 @@ final routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) =>
             const NoTransitionPage(child: OnboardingScreen()),
       ),
+
+
+
+      // Outside the shell: the panel has its own chrome, and an admin
+      // managing accounts should not be looking at their own meal plan.
+      GoRoute(
+        path: '/admin',
+        redirect: (context, state) {
+          // Role is checked here as well as on every endpoint, so a
+          // non-admin typing the URL is sent away rather than seeing an
+          // empty panel full of failed requests.
+          final user = ref.read(authControllerProvider).user;
+          return user?.isAdmin == true ? null : '/today';
+        },
+        pageBuilder: (context, state) =>
+            const NoTransitionPage(child: AdminScreen()),
+      ),
+
+
 
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),

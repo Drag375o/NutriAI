@@ -2,11 +2,15 @@
 
 from datetime import datetime, timezone
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.security import hash_password
+from app.models.conversation import Conversation
+from app.models.diet_plan import DietPlan
+from app.models.profile import Profile
 from app.models.user import User
+from app.models.weight_entry import WeightEntry
 
 
 def get_by_email(db: Session, email: str) -> User | None:
@@ -47,15 +51,17 @@ def touch_login(db: Session, user: User) -> None:
     db.commit()
 
 
-def list_all(db: Session, limit: int = 100, offset: int = 0) -> list[User]:
-    """For the admin panel."""
-    return list(
-        db.scalars(select(User).order_by(User.created_at.desc()).limit(limit).offset(offset))
-    )
+def update_details(db: Session, user: User, changes: dict) -> User:
+    """Apply name and email changes. Email is lowercased to match lookup."""
+    if "name" in changes and changes["name"]:
+        user.name = changes["name"]
+    if "email" in changes and changes["email"]:
+        user.email = changes["email"].lower()
 
+    db.commit()
+    db.refresh(user)
+    return user
 
-def count(db: Session) -> int:
-    return len(list(db.scalars(select(User.id))))
 
 def deactivate(db: Session, user: User) -> None:
     """Pause the account. Data is untouched."""
@@ -77,13 +83,68 @@ def delete(db: Session, user: User) -> None:
     db.delete(user)
     db.commit()
 
-def update_details(db: Session, user: User, changes: dict) -> User:
-    """Apply name and email changes. Email is lowercased to match lookup."""
-    if "name" in changes and changes["name"]:
-        user.name = changes["name"]
-    if "email" in changes and changes["email"]:
-        user.email = changes["email"].lower()
 
+# ----------------------------------------------------------------- admin
+
+
+def list_with_counts(db: Session, limit: int = 200) -> list[dict]:
+    """Every account with a summary of its activity.
+
+    Counts are computed in SQL rather than by loading the rows, so a user
+    with three hundred messages costs the same to list as one with none.
+    """
+    rows = db.execute(
+        select(
+            User,
+            select(func.count(Conversation.id))
+            .where(Conversation.user_id == User.id)
+            .scalar_subquery()
+            .label("conversations"),
+            select(func.count(DietPlan.id))
+            .where(DietPlan.user_id == User.id)
+            .scalar_subquery()
+            .label("plans"),
+            select(func.count(WeightEntry.id))
+            .where(WeightEntry.user_id == User.id)
+            .scalar_subquery()
+            .label("weights"),
+            select(Profile.goal)
+            .where(Profile.user_id == User.id)
+            .scalar_subquery()
+            .label("goal"),
+        )
+        .order_by(User.created_at.desc())
+        .limit(limit)
+    ).all()
+
+    return [
+        {
+            "user": row[0],
+            "conversations": row[1] or 0,
+            "plans": row[2] or 0,
+            "weights": row[3] or 0,
+            # Goal is the last thing onboarding sets, so its presence is a
+            # reasonable proxy for a finished profile.
+            "complete": row[4] is not None,
+        }
+        for row in rows
+    ]
+
+
+def set_active(db: Session, user: User, active: bool) -> User:
+    """Enable or disable an account.
+
+    Distinct from deactivate(), which the account holder controls: this
+    cannot be cleared by signing in, which is what makes it enforceable.
+    """
+    user.is_active = active
     db.commit()
     db.refresh(user)
     return user
+
+
+def force_password(db: Session, user: User, new_password: str) -> None:
+    """Set a password and require it to be changed at next sign-in."""
+    user.password_hash = hash_password(new_password)
+    user.must_change_password = True
+    db.commit()

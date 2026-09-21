@@ -10,6 +10,7 @@ import '../widgets/account_dialogs.dart';
 import '../widgets/change_password_sheet.dart';
 import '../widgets/settings_row.dart';
 import '../widgets/edit_account_sheet.dart';
+import 'package:go_router/go_router.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -52,28 +53,12 @@ class ProfileScreen extends ConsumerWidget {
 
           if (user.isAdmin)
             SettingsRow(
-              label: 'Role',
-              trailing: Align(
-                alignment: Alignment.centerLeft,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: p.turmeric),
-                    borderRadius: BorderRadius.circular(AppRadii.sm),
-                  ),
-                  child: Text(
-                    'ADMIN',
-                    style: AppTypography.mono(
-                      color: p.turmericText,
-                      size: 10,
-                    ),
-                  ),
-                ),
-              ),
+              label: 'Administration',
+              value: 'Open panel',
+              onTap: () => context.go('/admin'),
             ),
+
+
           SettingsRow(
             label: 'Password',
             value: 'Change',
