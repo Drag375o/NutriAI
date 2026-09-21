@@ -45,24 +45,45 @@ class AdminScreen extends ConsumerWidget {
                 error: (e, _) => Center(
                   child: Text('ERROR  $e', style: Admin.mono(color: Admin.alert)),
                 ),
-                data: (rows) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const _HeaderRow(),
-                    Expanded(
-                      child: ListView.builder(
-                        padding: EdgeInsets.zero,
-                        itemCount: rows.length,
-                        itemBuilder: (context, i) => UserRow(
-                          user: rows[i],
-                          isSelf: rows[i].id == me?.id,
-                        ),
+                // Scrolls sideways rather than clipping on a narrow window.
+                // For a data tool that is the right failure: a truncated
+                // column is worse than one you have to scroll to.
+
+
+                data: (rows) => LayoutBuilder(
+                  builder: (context, constraints) => SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SizedBox(
+                      // Fills the window, but never narrower than the
+                      // columns need: below 1280 the table scrolls sideways
+                      // rather than clipping, which is the right failure
+                      // for a data tool.
+                      width: constraints.maxWidth < 1280
+                          ? 1280
+                          : constraints.maxWidth,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const _HeaderRow(),
+                          Expanded(
+                            child: ListView.builder(
+                              padding: EdgeInsets.zero,
+                              itemCount: rows.length,
+                              itemBuilder: (context, i) => UserRow(
+                                user: rows[i],
+                                isSelf: rows[i].id == me?.id,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
+
+
           ],
         ),
       ),
@@ -143,6 +164,9 @@ class _BarActionState extends State<_BarAction> {
   }
 }
 
+
+
+
 class _Stats extends StatelessWidget {
   const _Stats({required this.stats});
 
@@ -155,23 +179,30 @@ class _Stats extends StatelessWidget {
       decoration: const BoxDecoration(
         border: Border(bottom: BorderSide(color: Admin.line)),
       ),
-      child: Row(
-        children: [
-          _Stat(label: 'ACCOUNTS', value: stats.totalUsers),
-          _Stat(label: 'ACTIVE', value: stats.activeUsers),
-          _Stat(label: 'PAUSED', value: stats.deactivatedUsers),
-          _Stat(
-            label: 'DISABLED',
-            value: stats.disabledUsers,
-            colour: stats.disabledUsers > 0 ? Admin.alert : null,
-          ),
-          _Stat(label: 'ADMINS', value: stats.admins),
-          _Stat(label: 'SEEN 7D', value: stats.signedInThisWeek),
-        ],
+      // Scrolls sideways on a narrow window, matching the table below it.
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _Stat(label: 'ACCOUNTS', value: stats.totalUsers),
+            _Stat(label: 'ACTIVE', value: stats.activeUsers),
+            _Stat(label: 'PAUSED', value: stats.deactivatedUsers),
+            _Stat(
+              label: 'DISABLED',
+              value: stats.disabledUsers,
+              colour: stats.disabledUsers > 0 ? Admin.alert : null,
+            ),
+            _Stat(label: 'ADMINS', value: stats.admins),
+            _Stat(label: 'SEEN 7D', value: stats.signedInThisWeek),
+          ],
+        ),
       ),
     );
   }
 }
+
+
+
 
 class _Stat extends StatelessWidget {
   const _Stat({required this.label, required this.value, this.colour});
@@ -216,7 +247,8 @@ class _HeaderRow extends StatelessWidget {
           SizedBox(width: 110, child: Text('PROFILE', style: Admin.label)),
           SizedBox(width: 120, child: Text('ACTIVITY', style: Admin.label)),
           SizedBox(width: 110, child: Text('LAST SEEN', style: Admin.label)),
-          const Spacer(),
+          
+          Expanded(child: Text('ACTIONS', style: Admin.label)),
         ],
       ),
     );

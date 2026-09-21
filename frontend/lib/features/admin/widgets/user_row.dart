@@ -73,8 +73,23 @@ class UserRow extends ConsumerWidget {
               style: Admin.mono(size: 11.5, color: Admin.faint),
             ),
           ),
-          const Spacer(),
-          if (!isSelf) _Actions(user: user) else Text('you', style: Admin.mono(size: 11.5, color: Admin.faint)),
+
+          
+          // Left-aligned under the ACTIONS heading, so the column reads as
+          // a column rather than as buttons pinned to the window edge.
+          Expanded(
+            child: isSelf
+                ? Text(
+                    'you',
+                    style: Admin.mono(size: 11.5, color: Admin.faint),
+                  )
+                : Align(
+                    alignment: Alignment.centerLeft,
+                    child: _Actions(user: user),
+                  ),
+          ),
+        
+
         ],
       ),
     );
@@ -136,6 +151,7 @@ class _Actions extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Row(
       mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
         _Action(
           label: user.isActive ? 'disable' : 'enable',
@@ -143,8 +159,10 @@ class _Actions extends ConsumerWidget {
               .read(adminUsersProvider.notifier)
               .setActive(user.id, !user.isActive),
         ),
+        // Shortened from "reset pw": the dialog that follows explains
+        // itself, so the button does not have to.
         _Action(
-          label: 'reset pw',
+          label: 'reset',
           onTap: () => _resetPassword(context, ref),
         ),
         _Action(
@@ -288,8 +306,13 @@ class _ActionState extends State<_Action> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: Container(
-          margin: const EdgeInsets.only(left: 6),
+          margin: const EdgeInsets.only(right: 6),
+          // A minimum width so "enable" and "disable" occupy the same
+          // slot: without it a row's buttons shift sideways depending on
+          // account state, and the column stops reading as a column.
+          constraints: const BoxConstraints(minWidth: 62),
           padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+          alignment: Alignment.center,
           decoration: BoxDecoration(
             color: _hovered ? Admin.raised : Colors.transparent,
             border: Border.all(color: _hovered ? colour : Admin.line),

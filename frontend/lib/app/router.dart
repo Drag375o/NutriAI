@@ -8,6 +8,7 @@ import '../features/auth/screens/login_screen.dart';
 import '../features/auth/state/auth_controller.dart';
 import '../features/coach/screens/coach_screen.dart';
 import '../features/health/screens/health_screen.dart';
+import '../features/landing/screens/landing_screen.dart';
 import '../features/onboarding/screens/onboarding_screen.dart';
 import '../features/plan/screens/plan_screen.dart';
 import '../features/progress/screens/progress_screen.dart';
@@ -34,23 +35,36 @@ final routerProvider = Provider<GoRouter>((ref) {
   ref.onDispose(refresh.dispose);
 
   return GoRouter(
-    initialLocation: '/today',
+    // The front page, not the dashboard: a first-time visitor should see
+    // what this is before being asked to sign in.
+    initialLocation: '/',
     refreshListenable: refresh,
     redirect: (context, state) {
       final auth = ref.read(authControllerProvider);
       final atLogin = state.matchedLocation == '/login';
+      final atLanding = state.matchedLocation == '/';
 
       // Still restoring a stored token: hold position rather than flashing
       // the login screen at someone who is signed in.
       if (auth.status == AuthStatus.checking) return null;
 
       if (auth.status == AuthStatus.signedOut) {
-        return atLogin ? null : '/login';
+        // The front page and the login form are both reachable signed out.
+        // Everything else sends you to the front page.
+        return (atLogin || atLanding) ? null : '/';
       }
 
-      return atLogin ? '/today' : null;
+      // Signed in, so neither the front page nor the login form has
+      // anything left to offer.
+      return (atLogin || atLanding) ? '/today' : null;
     },
     routes: [
+      GoRoute(
+        path: '/',
+        pageBuilder: (context, state) =>
+            const NoTransitionPage(child: LandingScreen()),
+      ),
+
       GoRoute(
         path: '/login',
         pageBuilder: (context, state) =>
