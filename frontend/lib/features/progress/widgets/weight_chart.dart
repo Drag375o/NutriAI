@@ -26,9 +26,13 @@ class WeightChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.palette;
 
+    // An infinite height means the parent is sizing this, so the SizedBox
+    // passes null and lets it fill whatever it is given.
+    final boxHeight = height.isFinite ? height : null;
+
     if (entries.length < 2) {
       return SizedBox(
-        height: height,
+        height: boxHeight,
         child: Center(
           child: Text(
             entries.isEmpty
@@ -41,7 +45,7 @@ class WeightChart extends StatelessWidget {
     }
 
     return SizedBox(
-      height: height,
+      height: boxHeight,
       child: CustomPaint(
         painter: _WeightPainter(
           entries: entries,

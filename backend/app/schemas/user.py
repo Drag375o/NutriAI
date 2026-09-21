@@ -62,3 +62,10 @@ class DeactivatedResponse(BaseModel):
 
     detail: str = "This account is deactivated."
     deactivated: bool = True
+
+class AccountUpdate(BaseModel):
+    """Changing the email means changing how you sign in, so both fields
+    are optional and sent only when actually edited."""
+
+    name: str | None = Field(default=None, min_length=1, max_length=80)
+    email: EmailStr | None = None

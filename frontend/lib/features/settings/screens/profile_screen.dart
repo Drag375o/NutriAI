@@ -9,6 +9,7 @@ import '../../auth/state/auth_controller.dart';
 import '../widgets/account_dialogs.dart';
 import '../widgets/change_password_sheet.dart';
 import '../widgets/settings_row.dart';
+import '../widgets/edit_account_sheet.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -24,119 +25,139 @@ class ProfileScreen extends ConsumerWidget {
       return const Center(child: CircularProgressIndicator());
     }
 
+    // Unconstrained: the ruled rows run the full width of the pane, and
+    // SettingsRow keeps the label and value together rather than letting
+    // them drift to opposite ends.
     return SafeArea(
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 620),
-          child: ListView(
-            padding: const EdgeInsets.all(AppSpacing.xxl),
-            children: [
-              Text('Profile', style: text.displayMedium),
-              const SizedBox(height: AppSpacing.xxl),
+      child: ListView(
+        padding: const EdgeInsets.all(AppSpacing.xxl),
+        children: [
+          Text('Profile', style: text.displayMedium),
+          const SizedBox(height: AppSpacing.xxl),
 
-              Text('ACCOUNT',
-                  style: AppTypography.mono(color: p.muted, size: 11)),
-              const SizedBox(height: AppSpacing.sm),
-              SettingsRow(label: 'Name', value: user.name),
-              SettingsRow(label: 'Email', value: user.email),
-              if (user.isAdmin)
-                SettingsRow(
-                  label: 'Role',
-                  trailing: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: p.turmeric),
-                      borderRadius: BorderRadius.circular(AppRadii.sm),
-                    ),
-                    child: Text(
-                      'ADMIN',
-                      style: AppTypography.mono(
-                        color: p.turmericText,
-                        size: 10,
-                      ),
+          Text('ACCOUNT',
+              style: AppTypography.mono(color: p.muted, size: 11)),
+          const SizedBox(height: AppSpacing.sm),
+          
+          SettingsRow(
+            label: 'Name',
+            value: user.name,
+            onTap: () => showEditNameSheet(context, user.name),
+          ),
+          SettingsRow(
+            label: 'Email',
+            value: user.email,
+            onTap: () => showEditEmailSheet(context, user.email),
+          ),
+
+          if (user.isAdmin)
+            SettingsRow(
+              label: 'Role',
+              trailing: Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: p.turmeric),
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
+                  ),
+                  child: Text(
+                    'ADMIN',
+                    style: AppTypography.mono(
+                      color: p.turmericText,
+                      size: 10,
                     ),
                   ),
                 ),
-              SettingsRow(
-                label: 'Password',
-                value: 'Change',
-                onTap: () async {
-                  final changed = await showChangePasswordSheet(context);
-                  if (changed && context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Password changed.')),
-                    );
-                  }
-                },
               ),
+            ),
+          SettingsRow(
+            label: 'Password',
+            value: 'Change',
+            onTap: () async {
+              final changed = await showChangePasswordSheet(context);
+              if (changed && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Password changed.')),
+                );
+              }
+            },
+          ),
 
-              const SizedBox(height: AppSpacing.xxxl),
-              Text('APPEARANCE',
-                  style: AppTypography.mono(color: p.muted, size: 11)),
-              const SizedBox(height: AppSpacing.sm),
-              SettingsRow(
-                label: 'Theme',
-                trailing: _ThemePicker(
-                  mode: mode,
-                  onChanged: (m) =>
-                      ref.read(themeModeProvider.notifier).set(m),
-                ),
+          const SizedBox(height: AppSpacing.xxxl),
+          Text('APPEARANCE',
+              style: AppTypography.mono(color: p.muted, size: 11)),
+          const SizedBox(height: AppSpacing.sm),
+          SettingsRow(
+            label: 'Theme',
+            trailing: Align(
+              alignment: Alignment.centerLeft,
+              child: _ThemePicker(
+                mode: mode,
+                onChanged: (m) => ref.read(themeModeProvider.notifier).set(m),
               ),
+            ),
+          ),
 
-              const SizedBox(height: AppSpacing.xxxl),
-              Text('YOUR DATA',
-                  style: AppTypography.mono(color: p.muted, size: 11)),
-              const SizedBox(height: AppSpacing.sm),
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                decoration: BoxDecoration(
-                  border: Border(top: BorderSide(color: p.hair)),
-                ),
-                // Said plainly rather than buried in a policy nobody reads.
-                child: Text(
-                  'Your profile, conversations, plans and weight history are '
-                  'stored on the machine running NutriAI. When you use the '
-                  'coach or build a plan, the details relevant to that '
-                  'question are sent to the AI provider. Your name and email '
-                  'are never sent.',
-                  style: text.bodySmall,
-                ),
-              ),
-
-              const SizedBox(height: AppSpacing.xxxl),
-              Text('ACCOUNT ACTIONS',
-                  style: AppTypography.mono(color: p.muted, size: 11)),
-              const SizedBox(height: AppSpacing.sm),
-              SettingsRow(
-                label: 'Sign out',
-                onTap: () =>
-                    ref.read(authControllerProvider.notifier).logout(),
-              ),
-              SettingsRow(
-                label: 'Deactivate account',
-                destructive: true,
-                onTap: () => confirmDeactivate(context, ref),
-              ),
-              SettingsRow(
-                label: 'Delete account',
-                destructive: true,
-                onTap: () => confirmDelete(context, ref),
-              ),
-
-              const SizedBox(height: AppSpacing.xxxl),
-              Text(
-                'NutriAI — general nutrition and wellness guidance. Not a '
-                'medical device, and no substitute for a doctor or a '
-                'registered dietitian.',
+          const SizedBox(height: AppSpacing.xxxl),
+          Text('YOUR DATA',
+              style: AppTypography.mono(color: p.muted, size: 11)),
+          const SizedBox(height: AppSpacing.sm),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+            decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: p.hair)),
+            ),
+            // Said plainly rather than buried in a policy nobody reads.
+            // Capped to a readable measure while the rule runs full width.
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 720),
+              child: Text(
+                'Your profile, conversations, plans and weight history are '
+                'stored on the machine running NutriAI. When you use the '
+                'coach or build a plan, the details relevant to that question '
+                'are sent to the AI provider. Your name and email are never '
+                'sent.',
                 style: text.bodySmall,
               ),
-              const SizedBox(height: AppSpacing.huge),
-            ],
+            ),
           ),
-        ),
+
+          const SizedBox(height: AppSpacing.xxxl),
+          Text('ACCOUNT ACTIONS',
+              style: AppTypography.mono(color: p.muted, size: 11)),
+          const SizedBox(height: AppSpacing.sm),
+          SettingsRow(
+            label: 'Sign out',
+            onTap: () => ref.read(authControllerProvider.notifier).logout(),
+          ),
+          SettingsRow(
+            label: 'Deactivate account',
+            destructive: true,
+            onTap: () => confirmDeactivate(context, ref),
+          ),
+          SettingsRow(
+            label: 'Delete account',
+            destructive: true,
+            onTap: () => confirmDelete(context, ref),
+          ),
+
+          const SizedBox(height: AppSpacing.xxxl),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: Text(
+              'NutriAI — general nutrition and wellness guidance. Not a '
+              'medical device, and no substitute for a doctor or a registered '
+              'dietitian.',
+              style: text.bodySmall,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.huge),
+        ],
       ),
     );
   }

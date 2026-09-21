@@ -76,3 +76,14 @@ def delete(db: Session, user: User) -> None:
     """
     db.delete(user)
     db.commit()
+
+def update_details(db: Session, user: User, changes: dict) -> User:
+    """Apply name and email changes. Email is lowercased to match lookup."""
+    if "name" in changes and changes["name"]:
+        user.name = changes["name"]
+    if "email" in changes and changes["email"]:
+        user.email = changes["email"].lower()
+
+    db.commit()
+    db.refresh(user)
+    return user

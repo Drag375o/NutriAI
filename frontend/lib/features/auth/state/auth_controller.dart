@@ -137,6 +137,21 @@ class AuthController extends Notifier<AuthState> {
     await _api.clearToken();
     state = const AuthState(status: AuthStatus.signedOut);
   }
+
+  /// Re-reads the account from the server.
+  ///
+  /// Used after editing name or email, since the user object in state is
+  /// a snapshot taken at sign-in.
+  Future<void> refreshUser() async {
+    try {
+      final user = await _repo.me();
+      state = AuthState(status: AuthStatus.signedIn, user: user);
+    } catch (_) {
+      // A failure here is not worth signing someone out over: the change
+      // saved, only the local copy is stale.
+    }
+  }
+
 }
 
 final authControllerProvider =

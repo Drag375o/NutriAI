@@ -12,11 +12,13 @@ import '../widgets/weight_chart.dart';
 class ProgressScreen extends ConsumerWidget {
   const ProgressScreen({super.key});
 
+  /// Below this the screen stacks and scrolls as one, since a third of a
+  /// phone screen is not enough for either half.
+  static const _splitAt = 720.0;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final history = ref.watch(weightControllerProvider);
-    final p = context.palette;
-    final text = Theme.of(context).textTheme;
 
     return SafeArea(
       child: history.when(
@@ -27,59 +29,125 @@ class ProgressScreen extends ConsumerWidget {
           actionLabel: 'Try again',
           onAction: () => ref.read(weightControllerProvider.notifier).refresh(),
         ),
-        data: (data) => Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 760),
-            child: ListView(
-              padding: const EdgeInsets.all(AppSpacing.xxl),
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+        data: (data) => LayoutBuilder(
+          builder: (context, constraints) {
+            final tall = constraints.maxHeight >= _splitAt;
+
+            if (!data.trend.hasHistory) {
+              return ListView(
+                padding: const EdgeInsets.all(AppSpacing.xxl),
+                children: [
+                  _Heading(latest: data.trend.latest),
+                  const SizedBox(height: AppSpacing.xxl),
+                  const _EmptyState(),
+                ],
+              );
+            }
+
+            final chart = _ChartPane(data: data);
+            final log = _HistoryPane(entries: data.entries, scrollable: tall);
+
+            // Fixed proportions on a tall window: the chart is the point of
+            // this screen, so it stays visible while the history scrolls
+            // beneath it rather than pushing it off the top.
+            if (tall) {
+              return Padding(
+                padding: const EdgeInsets.all(AppSpacing.xxl),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(
-                      child: Text('Progress', style: text.displayMedium),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => showLogWeightSheet(
-                        context,
-                        currentWeight: data.trend.latest,
-                      ),
-                      child: const Text('Record weight'),
-                    ),
+                    _Heading(latest: data.trend.latest),
+                    const SizedBox(height: AppSpacing.xl),
+                    Expanded(flex: 2, child: chart),
+                    const SizedBox(height: AppSpacing.xl),
+                    Expanded(flex: 1, child: log),
                   ],
                 ),
+              );
+            }
+
+            return ListView(
+              padding: const EdgeInsets.all(AppSpacing.xxl),
+              children: [
+                _Heading(latest: data.trend.latest),
+                const SizedBox(height: AppSpacing.xl),
+                SizedBox(height: 320, child: chart),
                 const SizedBox(height: AppSpacing.xxl),
-
-                if (!data.trend.hasHistory)
-                  const _EmptyState()
-                else ...[
-                  _TrendBand(trend: data.trend),
-                  const SizedBox(height: AppSpacing.xxl),
-                  WeightChart(
-                    entries: data.entries,
-                    target: data.trend.target,
-                  ),
-                  const SizedBox(height: AppSpacing.xxxl),
-                  Text('HISTORY',
-                      style: AppTypography.mono(color: p.muted, size: 11)),
-                  const SizedBox(height: AppSpacing.sm),
-                  // Newest first here, the reverse of the chart, because a
-                  // list is read from the top and a chart from the left.
-                  for (final entry in data.entries.reversed)
-                    _HistoryRow(entry: entry),
-                ],
-
+                log,
                 const SizedBox(height: AppSpacing.huge),
               ],
-            ),
-          ),
+            );
+          },
         ),
       ),
     );
   }
 }
 
-// ----------------------------------------------------------------- trend
+/// The title and record button, shared by the empty and populated states.
+class _Heading extends ConsumerWidget {
+  const _Heading({required this.latest});
+
+  final double? latest;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Expanded(
+          child: Text(
+            'Progress',
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+        ),
+        ElevatedButton(
+          onPressed: () => showLogWeightSheet(context, currentWeight: latest),
+          child: const Text('Record weight'),
+        ),
+      ],
+    );
+  }
+}
+
+// ----------------------------------------------------------------- chart
+
+class _ChartPane extends StatelessWidget {
+  const _ChartPane({required this.data});
+
+  final WeightHistory data;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _TrendBand(trend: data.trend),
+        const SizedBox(height: AppSpacing.lg),
+        // Takes whatever height the pane allows, so the line fills the
+        // space rather than sitting in a fixed box with air around it.
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.only(
+              top: AppSpacing.lg,
+              right: AppSpacing.md,
+            ),
+            decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: p.hair)),
+            ),
+            child: WeightChart(
+              entries: data.entries,
+              target: data.trend.target,
+              height: double.infinity,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
 
 class _TrendBand extends StatelessWidget {
   const _TrendBand({required this.trend});
@@ -118,6 +186,13 @@ class _TrendBand extends StatelessWidget {
               note: trend.startingOn == null
                   ? null
                   : 'since ${_formatDate(trend.startingOn!)}',
+            ),
+            VerticalDivider(color: p.hair, width: 1),
+            _Figure(
+              label: 'THIS WEEK',
+              value: _signed(trend.recentChange),
+              unit: trend.recentChange == null ? null : 'kg',
+              note: trend.recentChange == null ? 'not enough entries' : null,
             ),
             VerticalDivider(color: p.hair, width: 1),
             _Figure(
@@ -224,6 +299,8 @@ class _Figure extends StatelessWidget {
                     .textTheme
                     .bodySmall
                     ?.copyWith(color: noteColour ?? p.muted),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ],
@@ -234,6 +311,52 @@ class _Figure extends StatelessWidget {
 }
 
 // --------------------------------------------------------------- history
+
+class _HistoryPane extends StatelessWidget {
+  const _HistoryPane({required this.entries, required this.scrollable});
+
+  final List<WeightEntry> entries;
+
+  /// True when the pane has a fixed height and the list scrolls inside it,
+  /// false when the whole page scrolls instead.
+  final bool scrollable;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+
+    // Newest first here, the reverse of the chart, because a list is read
+    // from the top and a chart from the left.
+    final rows = [
+      for (final entry in entries.reversed) _HistoryRow(entry: entry),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: scrollable ? MainAxisSize.max : MainAxisSize.min,
+      children: [
+        Row(
+          children: [
+            Text('HISTORY',
+                style: AppTypography.mono(color: p.muted, size: 11)),
+            const Spacer(),
+            Text(
+              '${entries.length} ${entries.length == 1 ? "entry" : "entries"}',
+              style: AppTypography.mono(color: p.muted, size: 11),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        if (scrollable)
+          Expanded(
+            child: ListView(padding: EdgeInsets.zero, children: rows),
+          )
+        else
+          ...rows,
+      ],
+    );
+  }
+}
 
 class _HistoryRow extends ConsumerWidget {
   const _HistoryRow({required this.entry});
@@ -253,7 +376,7 @@ class _HistoryRow extends ConsumerWidget {
       child: Row(
         children: [
           SizedBox(
-            width: 96,
+            width: 110,
             child: Text(
               _formatDate(entry.recordedOn),
               style: AppTypography.mono(color: p.char, size: 11.5),
@@ -312,10 +435,13 @@ class _EmptyState extends StatelessWidget {
         children: [
           Text('Nothing recorded yet', style: text.titleLarge),
           const SizedBox(height: AppSpacing.sm),
-          Text(
-            'Record your weight to see how it moves over time, against the '
-            'goal you set. Two entries are enough to draw a line.',
-            style: text.bodyMedium,
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 640),
+            child: Text(
+              'Record your weight to see how it moves over time, against the '
+              'goal you set. Two entries are enough to draw a line.',
+              style: text.bodyMedium,
+            ),
           ),
         ],
       ),

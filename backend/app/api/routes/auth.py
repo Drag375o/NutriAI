@@ -8,8 +8,10 @@ from app.core.security import create_access_token, verify_password
 from app.db.session import get_db
 from app.models.user import User
 from app.repositories import user_repo
+
 from app.schemas.user import (
     AccountAction,
+    AccountUpdate,
     PasswordChange,
     TokenResponse,
     UserLogin,
@@ -160,3 +162,27 @@ def delete_account(
             detail="That password is not correct.",
         )
     user_repo.delete(db, user)
+
+@router.patch("/me", response_model=UserRead)
+def update_account(
+    payload: AccountUpdate,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+) -> UserRead:
+    """Change your name or email.
+
+    Email is checked for collisions first: two accounts sharing one address
+    would make sign-in ambiguous.
+    """
+    changes = payload.model_dump(exclude_unset=True)
+
+    new_email = changes.get("email")
+    if new_email and new_email.lower() != user.email:
+        if user_repo.get_by_email(db, new_email):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Another account already uses that email.",
+            )
+
+    updated = user_repo.update_details(db, user, changes)
+    return UserRead.model_validate(updated)

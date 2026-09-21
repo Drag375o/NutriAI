@@ -22,4 +22,13 @@ class AccountRepository {
   /// account holder, not just that the browser is signed in.
   Future<void> deleteAccount(String password) =>
       _api.post('/auth/delete', body: {'password': password});
+
+    /// Changes name or email. Only the fields supplied are sent, so an
+  /// untouched field cannot be blanked by accident.
+  Future<void> updateDetails({String? name, String? email}) =>
+      _api.patch('/auth/me', body: {
+        if (name != null) 'name': name,
+        if (email != null) 'email': email,
+      });
+  
 }

@@ -49,7 +49,22 @@ class AccountController extends Notifier<void> {
       return e.toString();
     }
   }
+
+  Future<String?> updateDetails({String? name, String? email}) async {
+    try {
+      await _repo.updateDetails(name: name, email: email);
+      // The signed-in user is held in auth state, so it has to be
+      // refreshed for the new value to appear on screen.
+      await ref.read(authControllerProvider.notifier).refreshUser();
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
 }
+
+
 
 final accountControllerProvider =
     NotifierProvider<AccountController, void>(AccountController.new);

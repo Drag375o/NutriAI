@@ -38,7 +38,10 @@ class SettingsRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(
+          // Fixed label column, so the value starts at the same place on
+          // every row and does not drift away on a wide window.
+          SizedBox(
+            width: 180,
             child: Text(
               label,
               style: text.bodyLarge?.copyWith(
@@ -46,14 +49,11 @@ class SettingsRow extends StatelessWidget {
               ),
             ),
           ),
-          if (trailing != null)
-            trailing!
-          else if (value != null)
-            Text(value!, style: text.bodyMedium),
-          if (onTap != null && trailing == null) ...[
-            const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: trailing ?? Text(value ?? '', style: text.bodyMedium),
+          ),
+          if (onTap != null && trailing == null)
             Icon(Icons.chevron_right, size: 18, color: p.muted),
-          ],
         ],
       ),
     );
