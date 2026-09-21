@@ -7,6 +7,8 @@ import '../constants/api_config.dart';
 import 'api_exception.dart';
 import 'token_store.dart';
 
+import 'package:http_parser/http_parser.dart';
+
 /// The single path between Flutter and FastAPI.
 class ApiClient {
   ApiClient({http.Client? client, TokenStore? tokens})
@@ -85,6 +87,60 @@ class ApiClient {
       'Could not load that.',
       statusCode: response.statusCode,
     );
+  }
+
+  /// Uploads a file as multipart form data.
+  ///
+  /// Separate from the JSON methods: a multipart request cannot set a
+  /// Content-Type of application/json, and http handles the boundary.
+  Future<Map<String, dynamic>> upload(
+    String path, {
+    required List<int> bytes,
+    required String filename,
+    required String contentType,
+  }) async {
+    final request = http.MultipartRequest('POST', Uri.parse(ApiConfig.url(path)));
+
+    if (_token != null) {
+      request.headers['Authorization'] = 'Bearer $_token';
+    }
+
+    final parts = contentType.split('/');
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'file',
+        bytes,
+        filename: filename,
+        contentType: MediaType(parts.first, parts.last),
+      ),
+    );
+
+    late http.Response response;
+
+    try {
+      final streamed = await request.send().timeout(ApiConfig.timeout);
+      response = await http.Response.fromStream(streamed);
+    } on TimeoutException {
+      throw ApiException.timeout();
+    } catch (_) {
+      throw ApiException.network();
+    }
+
+    final Map<String, dynamic> decoded;
+    try {
+      decoded = jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (_) {
+      throw ApiException(
+        'The server sent something unexpected.',
+        statusCode: response.statusCode,
+      );
+    }
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return decoded;
+    }
+
+    throw ApiException(_messageFrom(decoded), statusCode: response.statusCode);
   }
 
   /// Runs a request and normalises every outcome into either a decoded

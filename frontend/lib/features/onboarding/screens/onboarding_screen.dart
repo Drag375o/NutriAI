@@ -10,7 +10,7 @@ import '../../profile/data/profile_models.dart';
 import '../../profile/state/profile_controller.dart';
 import '../widgets/choice_field.dart';
 import '../widgets/onboarding_scaffold.dart';
-import '../state/onboarding_state.dart';
+
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -153,10 +153,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
       onNext: _canContinue ? _next : null,
       onBack: _step > 1 ? () => setState(() => _step--) : null,
-      onSkip: () {
-        ref.read(onboardingSkippedProvider.notifier).skip();
-        context.go('/today');
-      },
+      onSkip: () => context.go('/today'),
       nextLabel: _step == _totalSteps ? 'Finish' : 'Continue',
 
 

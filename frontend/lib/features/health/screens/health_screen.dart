@@ -10,6 +10,8 @@ import '../../profile/data/profile_models.dart';
 import '../../profile/state/profile_controller.dart';
 import '../../progress/widgets/log_weight_sheet.dart';
 import '../widgets/edit_field_sheet.dart';
+import '../widgets/prescription_sheet.dart';
+
 
 /// Health, laid out as a bento grid.
 ///
@@ -157,6 +159,10 @@ class _Grid extends ConsumerWidget {
   ///
   /// Order here is placement order and must match the order [_tiles]
   /// returns, since the quilt fills the first position with room.
+  /// Tile spans per column count.
+  ///
+  /// Order here is placement order and must match the order [_tiles]
+  /// returns, since the quilt fills the first position with room.
   List<_Span> _patternFor(int columns) => switch (columns) {
         4 => const [
             _Span(2, 2), // BMI hero
@@ -171,6 +177,7 @@ class _Grid extends ConsumerWidget {
             _Span(1, 1), // Age
             _Span(2, 1), // Diet
             _Span(2, 1), // Allergies
+            _Span(2, 1), // Conditions
           ],
         3 => const [
             _Span(2, 2), // BMI hero
@@ -185,6 +192,7 @@ class _Grid extends ConsumerWidget {
             _Span(1, 1), // Age
             _Span(1, 1), // Diet
             _Span(2, 1), // Allergies
+            _Span(3, 1), // Conditions
           ],
         2 => const [
             _Span(2, 2),
@@ -197,6 +205,7 @@ class _Grid extends ConsumerWidget {
             _Span(1, 1),
             _Span(1, 1),
             _Span(1, 1),
+            _Span(2, 1),
             _Span(2, 1),
             _Span(2, 1),
           ],
@@ -215,6 +224,7 @@ class _Grid extends ConsumerWidget {
             _Span(1, 1), // Age
             _Span(1, 1), // Diet
             _Span(1, 1), // Allergies
+            _Span(1, 1), // Conditions
           ],
       };
 
@@ -401,6 +411,24 @@ class _Grid extends ConsumerWidget {
       ),
     );
 
+    // Filled in by hand, or read from a prescription photograph. Only the
+    // conditions are stored: the image is processed in memory and the
+    // medication on it is deliberately not kept.
+    final conditions = _Tile(
+      fill: p.linen,
+      onTap: () => showPrescriptionSheet(
+        context,
+        currentConditions: profile.conditions,
+      ),
+      child: _Value(
+        icon: Icons.medical_information_outlined,
+        label: 'HEALTH CONDITIONS',
+        text: profile.conditions,
+        tappable: true,
+      ),
+    );
+
+
     // On one column tiles appear in exactly this order, so the caveat is
     // moved up to sit directly beneath the number it explains. With more
     // columns it belongs in its own band further down.
@@ -418,6 +446,7 @@ class _Grid extends ConsumerWidget {
         age,
         diet,
         allergies,
+        conditions,
       ];
     }
 
@@ -434,6 +463,7 @@ class _Grid extends ConsumerWidget {
       age,
       diet,
       allergies,
+      conditions,
     ];
   }
 

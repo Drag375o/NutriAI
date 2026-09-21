@@ -42,6 +42,10 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str = "sqlite:///./nutriai.db"
 
+    # Path to the Tesseract binary. Blank means "already on PATH", which is
+    # usual on Linux and macOS.
+    TESSERACT_PATH: str = ""
+
     @property
     def cors_origin_list(self) -> list[str]:
         """CORS_ORIGINS is a comma-separated string in .env; FastAPI wants a list."""
