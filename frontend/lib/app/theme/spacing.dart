@@ -16,6 +16,9 @@ abstract final class AppRadii {
   static const double sm = 2;
   static const double md = 3;
   static const double lg = 4;
+  /// Bento tile corner. Larger than the app's usual near-square radius,
+  /// kept as its own token so the experiment can be reverted in one place.
+  static const double tile = 16;
 
   /// Size of the cut corner on primary buttons. The signature shape.
   static const double chamfer = 10;
