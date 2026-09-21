@@ -9,6 +9,12 @@ import '../../auth/state/auth_controller.dart';
 import '../../profile/data/profile_models.dart';
 import '../../profile/state/profile_controller.dart';
 
+import '../../coach/state/chat_controller.dart';
+import '../../coach/widgets/suggestion_chips.dart';
+
+import '../../plan/data/plan_models.dart';
+import '../../plan/state/plan_controller.dart';
+
 class TodayScreen extends ConsumerWidget {
   const TodayScreen({super.key});
 
@@ -314,52 +320,136 @@ class _MetricsPlaceholder extends StatelessWidget {
 
 // -------------------------------------------------------------- sections
 
-class _PlanSection extends StatelessWidget {
+class _PlanSection extends ConsumerWidget {
   const _PlanSection();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final p = context.palette;
     final text = Theme.of(context).textTheme;
+    final plan = ref.watch(planControllerProvider).plan;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("TODAY'S PLAN",
-            style: AppTypography.mono(color: p.muted, size: 11)),
-        const SizedBox(height: AppSpacing.md),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          decoration: BoxDecoration(
-            border: Border.all(color: p.hair),
-            borderRadius: BorderRadius.circular(AppRadii.md),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('No plan for today yet', style: text.titleLarge),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                'Meal planning arrives soon. NutriAI will build a day around '
-                'your calorie target, your goal, and the food you actually eat.',
-                style: text.bodyMedium,
+        Row(
+          children: [
+            Text("TODAY'S PLAN",
+                style: AppTypography.mono(color: p.muted, size: 11)),
+            const Spacer(),
+            if (plan != null)
+              TextButton(
+                onPressed: () => context.go('/plan'),
+                child: const Text('Open'),
               ),
-            ],
-          ),
+          ],
         ),
+        const SizedBox(height: AppSpacing.md),
+
+        if (plan == null)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            decoration: BoxDecoration(
+              border: Border.all(color: p.hair),
+              borderRadius: BorderRadius.circular(AppRadii.md),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('No plan for today yet', style: text.titleLarge),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'NutriAI can build a day around your calorie target, your '
+                  'goal, and the food you actually eat.',
+                  style: text.bodyMedium,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                ElevatedButton(
+                  onPressed: () => context.go('/plan'),
+                  child: const Text('Build my day'),
+                ),
+              ],
+            ),
+          )
+        else
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: p.hair),
+              borderRadius: BorderRadius.circular(AppRadii.md),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // The meals themselves, one line each: enough to know what
+                // is coming without opening the full plan.
+                for (final meal in plan.meals)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                      vertical: AppSpacing.md,
+                    ),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 72,
+                          child: Text(
+                            meal.timeHint ?? MealSlots.label(meal.slot),
+                            style: AppTypography.mono(color: p.muted, size: 11),
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            meal.name,
+                            style: text.bodyMedium?.copyWith(color: p.ink),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Text(
+                          '${meal.calories}',
+                          style: AppTypography.mono(color: p.char, size: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                    vertical: AppSpacing.md,
+                  ),
+                  decoration: BoxDecoration(
+                    color: p.linen,
+                    border: Border(top: BorderSide(color: p.hair)),
+                  ),
+                  child: Row(
+                    children: [
+                      Text('TOTAL',
+                          style: AppTypography.mono(color: p.muted, size: 10.5)),
+                      const Spacer(),
+                      Text(
+                        '${plan.totalCalories} of ${plan.targetCalories} kcal',
+                        style: AppTypography.mono(color: p.ink, size: 12),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
       ],
     );
   }
 }
 
-class _CoachSection extends StatelessWidget {
+
+
+
+class _CoachSection extends ConsumerWidget {
   const _CoachSection();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final p = context.palette;
-    final text = Theme.of(context).textTheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -367,30 +457,23 @@ class _CoachSection extends StatelessWidget {
         Text('ASK NUTRIAI',
             style: AppTypography.mono(color: p.muted, size: 11)),
         const SizedBox(height: AppSpacing.md),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          decoration: BoxDecoration(
-            border: Border.all(color: p.hair),
-            borderRadius: BorderRadius.circular(AppRadii.md),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Coming next', style: text.titleLarge),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                'Questions about portions, swaps, or what to eat tonight, '
-                'answered using the profile you just filled in.',
-                style: text.bodyMedium,
-              ),
-            ],
-          ),
+        // Tapping one opens the coach with that question already sent, so
+        // the dashboard is an entry point rather than a description of one.
+        SuggestionChips(
+          limit: 3,
+          onSelected: (question) {
+            ref.read(chatControllerProvider.notifier).startNew();
+            ref.read(chatControllerProvider.notifier).send(question);
+            context.go('/coach');
+          },
         ),
       ],
     );
   }
 }
+
+
+
 
 /// An inline message with one action. Used for both the loading failure and
 /// the incomplete-profile prompt, which need the same shape.

@@ -5,6 +5,8 @@ import '../../../app/theme/colors.dart';
 import '../../../app/theme/spacing.dart';
 import '../state/auth_controller.dart';
 import '../widgets/auth_scaffold.dart';
+import 'package:go_router/go_router.dart';
+
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -31,6 +33,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -43,9 +46,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         : await auth.login(_email.text.trim(), _password.text);
 
     if (mounted) setState(() => _busy = false);
-    // On success the router redirects; nothing to do here.
-    if (!ok && mounted) FocusScope.of(context).unfocus();
+    if (!mounted) return;
+
+    // A new account has nothing in its profile, so it goes straight to
+    // onboarding. Handled here rather than in the router's redirect: the
+    // router would have to watch profile state, and a profile save landing
+    // mid-frame rebuilds it underneath the screen that triggered it.
+    if (ok && _registering) {
+      context.go('/onboarding');
+      return;
+    }
+
+    // On a successful sign-in the router redirects; nothing to do here.
+    if (!ok) FocusScope.of(context).unfocus();
   }
+
+
+
 
   /// Offered when the credentials were correct but the account is paused.
   /// Restoring is an explicit choice rather than a side effect of signing

@@ -35,7 +35,8 @@ def _extract_json(text: str) -> dict:
     """Pull a JSON object out of whatever the model returned.
 
     Handles markdown fences and leading commentary, both of which appear
-    even when the prompt forbids them.
+    even when the prompt forbids them. The model's actual output is not
+    included in the error: it belongs in a log, not in front of a user.
     """
     cleaned = text.strip()
 
@@ -69,6 +70,7 @@ def _extract_json(text: str) -> dict:
     except json.JSONDecodeError:
         raise DietPlanError("The AI did not return a usable plan. Try again.")
 
+
 def _validate(plan: GeneratedPlan, target: int) -> None:
     """Reject plans that are unsafe or do not meet the target.
 
@@ -91,14 +93,23 @@ def _validate(plan: GeneratedPlan, target: int) -> None:
 
 
 async def generate(
-    service: AIService, *, target_calories: int, context: str | None, note: str | None
+    service: AIService,
+    *,
+    target_calories: int,
+    context: str | None,
+    note: str | None,
 ) -> GeneratedPlan:
     """Ask for a plan, parse it, and check it before returning."""
     request = build_request(target_calories, context)
+
     if note:
-        request = f"{request}\n\n## What they asked for\n{note}\n\nThis takes priority over the general defaults."
-        "This takes priority over the general defaults."
-        
+        # Given its own labelled section rather than appended as a trailing
+        # sentence, where the prompt's own rules outweighed it.
+        request = (
+            f"{request}\n\n## What they asked for\n{note}\n\n"
+            "This takes priority over the general defaults."
+        )
+
     messages = [
         ChatMessage(role="system", content=DIET_PLAN),
         ChatMessage(role="user", content=request),
@@ -118,9 +129,7 @@ async def generate(
     try:
         plan = GeneratedPlan.model_validate(raw)
     except ValidationError:
-        raise DietPlanError(
-            "The AI returned a plan in the wrong shape. Try again."
-        )
+        raise DietPlanError("The AI returned a plan in the wrong shape. Try again.")
 
     _validate(plan, target_calories)
     return plan

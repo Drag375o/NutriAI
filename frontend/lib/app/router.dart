@@ -2,27 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../core/widgets/placeholder_screen.dart';
+import '../core/widgets/not_found_screen.dart';
+import '../features/admin/screens/admin_screen.dart';
 import '../features/auth/screens/login_screen.dart';
 import '../features/auth/state/auth_controller.dart';
+import '../features/coach/screens/coach_screen.dart';
 import '../features/health/screens/health_screen.dart';
 import '../features/onboarding/screens/onboarding_screen.dart';
-import '../features/shell/app_shell.dart';
-
-import '../features/today/screens/today_screen.dart';
-
-import '../features/coach/screens/coach_screen.dart';
-
 import '../features/plan/screens/plan_screen.dart';
-
 import '../features/progress/screens/progress_screen.dart';
-
 import '../features/settings/screens/profile_screen.dart';
-
-import '../features/admin/screens/admin_screen.dart';
+import '../features/shell/app_shell.dart';
+import '../features/today/screens/today_screen.dart';
 
 /// Bridges Riverpod and go_router: the router re-evaluates its redirect
 /// whenever auth state changes.
+///
+/// Deliberately does not listen to the profile. Screens watch that too,
+/// and a save landing mid-frame would rebuild the router underneath them,
+/// which trips a framework assertion. New accounts are sent to onboarding
+/// from the login screen instead.
 class _AuthListenable extends ChangeNotifier {
   _AuthListenable(this._ref) {
     _ref.listen(authControllerProvider, (_, __) => notifyListeners());
@@ -58,7 +57,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             const NoTransitionPage(child: LoginScreen()),
       ),
 
-
       // Outside the shell on purpose: onboarding is a focused flow, so the
       // navigation rail would only offer ways to abandon it.
       GoRoute(
@@ -66,8 +64,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) =>
             const NoTransitionPage(child: OnboardingScreen()),
       ),
-
-
 
       // Outside the shell: the panel has its own chrome, and an admin
       // managing accounts should not be looking at their own meal plan.
@@ -84,8 +80,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             const NoTransitionPage(child: AdminScreen()),
       ),
 
-
-
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),
         routes: [
@@ -94,43 +88,34 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: TodayScreen()),
           ),
-          
           GoRoute(
             path: '/plan',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: PlanScreen()),
           ),
-
           GoRoute(
             path: '/coach',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: CoachScreen()),
           ),
-
           GoRoute(
             path: '/progress',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: ProgressScreen()),
           ),
-
           GoRoute(
             path: '/health',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: HealthScreen()),
           ),
-          
           GoRoute(
             path: '/profile',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: ProfileScreen()),
           ),
-
         ],
       ),
     ],
-    errorBuilder: (context, state) => const PlaceholderScreen(
-      title: 'Page not found',
-      message: 'That address does not exist. Use the navigation to get back.',
-    ),
+    errorBuilder: (context, state) => const NotFoundScreen(),
   );
 });

@@ -85,6 +85,8 @@ class _ArtPanel extends StatelessWidget {
                 ),
               ),
             ),
+
+
             Padding(
               // Margins grow with the panel, so the block keeps the same
               // proportion of breathing room at every size.
@@ -98,40 +100,56 @@ class _ArtPanel extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.end,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
-                    'Eat well\non your terms\nYour food, your goals your data',
-                    textAlign: TextAlign.right,
-                    style: GoogleFonts.leagueSpartan(
-                      color: _textColour,
-                      fontSize: leadSize,
-                      fontWeight: FontWeight.w700,
-                      height: 1.2,
-                    ),
-                  ),
-                  SizedBox(height: leadSize * 1.1),
-                  Text.rich(
-                    TextSpan(
-                      children: [
-                        const TextSpan(text: 'Nutri'),
-                        TextSpan(
-                          text: 'AI',
-                          style: TextStyle(color: context.palette.turmeric),
-                        ),
-                        const TextSpan(text: ' keeps all\nthree yours'),
-                      ],
-                    ),
-                    textAlign: TextAlign.right,
-                    style: GoogleFonts.leagueSpartan(
-                      color: _textColour,
-                      fontSize: headlineSize,
-                      fontWeight: FontWeight.w700,
-                      height: 0.95,
-                      letterSpacing: headlineSize * -0.015,
+                  // Scales down rather than overflowing when the panel is
+                  // too short for the type size the width implies.
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.bottomRight,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            'Eat well\non your terms\nYour food, your goals your data',
+                            textAlign: TextAlign.right,
+                            style: GoogleFonts.leagueSpartan(
+                              color: _textColour,
+                              fontSize: leadSize,
+                              fontWeight: FontWeight.w700,
+                              height: 1.2,
+                            ),
+                          ),
+                          SizedBox(height: leadSize * 1.1),
+                          Text.rich(
+                            TextSpan(
+                              children: [
+                                const TextSpan(text: 'Nutri'),
+                                TextSpan(
+                                  text: 'AI',
+                                  style: TextStyle(
+                                    color: context.palette.turmeric,
+                                  ),
+                                ),
+                                const TextSpan(text: ' keeps all\nthree yours'),
+                              ],
+                            ),
+                            textAlign: TextAlign.right,
+                            style: GoogleFonts.leagueSpartan(
+                              color: _textColour,
+                              fontSize: headlineSize,
+                              fontWeight: FontWeight.w700,
+                              height: 0.95,
+                              letterSpacing: headlineSize * -0.015,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
+
           ],
         );
       },

@@ -1,22 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-/// The app's light/dark setting.
+/// The app's light/dark setting, remembered across restarts.
 ///
-/// Defaults to [ThemeMode.system] so NutriAI matches the user's OS until
-/// they choose otherwise. Persistence to disk arrives with Settings in
-/// Phase 8; for now the choice lasts for the session.
+/// The stored value is read in main() before the first frame and injected
+/// here, rather than loaded asynchronously afterwards: reading it later
+/// meant the app painted in system mode and repainted a moment after,
+/// which flashed on every load.
 class ThemeModeNotifier extends Notifier<ThemeMode> {
-  @override
-  ThemeMode build() => ThemeMode.system;
+  ThemeModeNotifier({this.initial = ThemeMode.system});
 
-  void set(ThemeMode mode) => state = mode;
+  /// The mode to start in, supplied by main().
+  final ThemeMode initial;
+
+  static const storageKey = 'nutriai.theme_mode';
+
+  /// Turns a stored string back into a mode. Anything unrecognised, or
+  /// nothing stored at all, falls back to following the system.
+  static ThemeMode parse(String? stored) => switch (stored) {
+        'light' => ThemeMode.light,
+        'dark' => ThemeMode.dark,
+        _ => ThemeMode.system,
+      };
+
+  @override
+  ThemeMode build() => initial;
+
+  Future<void> set(ThemeMode mode) async {
+    state = mode;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(storageKey, mode.name);
+  }
 
   /// Flips between light and dark. If currently following the system,
   /// flips away from whatever the system is showing.
-  void toggle(Brightness current) {
-    state = current == Brightness.dark ? ThemeMode.light : ThemeMode.dark;
-  }
+  void toggle(Brightness current) =>
+      set(current == Brightness.dark ? ThemeMode.light : ThemeMode.dark);
 }
 
 final themeModeProvider =
