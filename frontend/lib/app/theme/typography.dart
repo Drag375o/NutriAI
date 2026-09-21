@@ -1,16 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'colors.dart';
 
+/// Type for the whole app.
+///
+/// Fonts are bundled in pubspec.yaml rather than fetched at runtime, so
+/// these are plain family names. Flutter picks the right file from the
+/// weight, which is why only the weights declared there can be used.
 abstract final class AppTypography {
+  static const _sans = 'Archivo';
+  static const _mono = 'IBMPlexMono';
+  static const _script = 'Sacramento';
+
   /// Numerals, units, timestamps, metric readouts.
   static TextStyle mono({
     required Color color,
     double size = 14,
     FontWeight weight = FontWeight.w400,
   }) {
-    return GoogleFonts.ibmPlexMono(
+    return TextStyle(
+      fontFamily: _mono,
       color: color,
       fontSize: size,
       fontWeight: weight,
@@ -20,7 +29,8 @@ abstract final class AppTypography {
   }
 
   /// Large metric values, e.g. a weight on the dashboard.
-  static TextStyle metric(Color color) => GoogleFonts.ibmPlexMono(
+  static TextStyle metric(Color color) => TextStyle(
+        fontFamily: _mono,
         color: color,
         fontSize: 27,
         fontWeight: FontWeight.w500,
@@ -34,7 +44,8 @@ abstract final class AppTypography {
     required Color color,
     double size = 34,
   }) {
-    return GoogleFonts.sacramento(
+    return TextStyle(
+      fontFamily: _script,
       color: color,
       fontSize: size,
       height: 1.1,
@@ -42,18 +53,18 @@ abstract final class AppTypography {
   }
 
   static TextTheme textTheme(AppPalette palette) {
-    final base = GoogleFonts.archivoTextTheme();
-
-    return base.copyWith(
+    return TextTheme(
       // Screen titles and hero moments.
-      displayLarge: GoogleFonts.archivo(
+      displayLarge: TextStyle(
+        fontFamily: _sans,
         color: palette.ink,
         fontSize: 49,
         fontWeight: FontWeight.w700,
         letterSpacing: -1.4,
         height: 1.05,
       ),
-      displayMedium: GoogleFonts.archivo(
+      displayMedium: TextStyle(
+        fontFamily: _sans,
         color: palette.ink,
         fontSize: 39,
         fontWeight: FontWeight.w600,
@@ -61,46 +72,53 @@ abstract final class AppTypography {
         height: 1.1,
       ),
       // Section headings.
-      headlineLarge: GoogleFonts.archivo(
+      headlineLarge: TextStyle(
+        fontFamily: _sans,
         color: palette.ink,
         fontSize: 31,
         fontWeight: FontWeight.w600,
         letterSpacing: -0.5,
         height: 1.15,
       ),
-      headlineMedium: GoogleFonts.archivo(
+      headlineMedium: TextStyle(
+        fontFamily: _sans,
         color: palette.ink,
         fontSize: 25,
         fontWeight: FontWeight.w600,
         height: 1.2,
       ),
-      titleLarge: GoogleFonts.archivo(
+      titleLarge: TextStyle(
+        fontFamily: _sans,
         color: palette.ink,
         fontSize: 20,
         fontWeight: FontWeight.w600,
         height: 1.3,
       ),
       // Reading text.
-      bodyLarge: GoogleFonts.archivo(
+      bodyLarge: TextStyle(
+        fontFamily: _sans,
         color: palette.ink,
         fontSize: 16,
         fontWeight: FontWeight.w400,
         height: 1.55,
       ),
-      bodyMedium: GoogleFonts.archivo(
+      bodyMedium: TextStyle(
+        fontFamily: _sans,
         color: palette.char,
         fontSize: 14,
         fontWeight: FontWeight.w400,
         height: 1.5,
       ),
       // Captions and field labels.
-      bodySmall: GoogleFonts.archivo(
+      bodySmall: TextStyle(
+        fontFamily: _sans,
         color: palette.muted,
         fontSize: 13,
         fontWeight: FontWeight.w400,
         height: 1.4,
       ),
-      labelLarge: GoogleFonts.archivo(
+      labelLarge: TextStyle(
+        fontFamily: _sans,
         color: palette.ink,
         fontSize: 14,
         fontWeight: FontWeight.w600,

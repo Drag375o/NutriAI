@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Colours and type for the administration panel.
 ///
@@ -30,13 +29,16 @@ abstract final class Admin {
     FontWeight weight = FontWeight.w400,
     double spacing = 0,
   }) =>
-      GoogleFonts.ibmPlexMono(
+      TextStyle(
+        fontFamily: 'IBMPlexMono',
         fontSize: size,
         color: color,
         fontWeight: weight,
         letterSpacing: spacing,
         height: 1.45,
       );
+
+
 
   static TextStyle get title =>
       mono(size: 20, weight: FontWeight.w600, spacing: -0.3);

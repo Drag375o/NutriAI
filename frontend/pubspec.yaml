@@ -13,20 +13,17 @@ dependencies:
 
   cupertino_icons: ^1.0.8
 
-  # Archivo and IBM Plex Mono, fetched at runtime.
-  # Swapped for bundled .ttf files in Phase 9 so the app works offline.
-  google_fonts: ^8.2.1
-
   # State that outlives a single screen: theme, session, profile.
   flutter_riverpod: ^3.4.3
 
   # URL-based navigation. On web this gives real addresses and a
   # working browser back button.
   go_router: ^18.0.1
+
   http: ^1.6.0
+  http_parser: ^4.1.2
   shared_preferences: ^2.5.5
   url_launcher: ^6.3.2
-  http_parser: ^4.1.2
   image_picker: ^1.2.3
 
 dev_dependencies:
@@ -40,3 +37,35 @@ flutter:
 
   assets:
     - assets/images/
+
+  # Bundled rather than fetched at runtime. google_fonts downloaded four
+  # families on every load, which delayed first paint and made the app
+  # unusable offline. Only the weights the theme asks for are included.
+  fonts:
+    - family: Archivo
+      fonts:
+        - asset: assets/fonts/Archivo-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Archivo-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Archivo-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Archivo-Bold.ttf
+          weight: 700
+
+    - family: IBMPlexMono
+      fonts:
+        - asset: assets/fonts/IBMPlexMono-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/IBMPlexMono-Medium.ttf
+          weight: 500
+
+    - family: LeagueSpartan
+      fonts:
+        - asset: assets/fonts/LeagueSpartan-Bold.ttf
+          weight: 700
+
+    - family: Sacramento
+      fonts:
+        - asset: assets/fonts/Sacramento-Regular.ttf
+          weight: 400

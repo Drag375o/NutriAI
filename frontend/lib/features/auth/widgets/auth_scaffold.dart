@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../app/theme/colors.dart';
 import '../../../app/theme/spacing.dart';
@@ -55,6 +54,10 @@ class _ArtPanel extends StatelessWidget {
 
   static const _textColour = Color(0xFFFFECEC);
 
+  /// The tagline face. Bundled in pubspec.yaml rather than fetched, so
+  /// this is a plain family name and Flutter picks the file by weight.
+  static const _display = 'LeagueSpartan';
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -86,7 +89,6 @@ class _ArtPanel extends StatelessWidget {
               ),
             ),
 
-
             Padding(
               // Margins grow with the panel, so the block keeps the same
               // proportion of breathing room at every size.
@@ -112,7 +114,8 @@ class _ArtPanel extends StatelessWidget {
                           Text(
                             'Eat well\non your terms\nYour food, your goals your data',
                             textAlign: TextAlign.right,
-                            style: GoogleFonts.leagueSpartan(
+                            style: TextStyle(
+                              fontFamily: _display,
                               color: _textColour,
                               fontSize: leadSize,
                               fontWeight: FontWeight.w700,
@@ -134,7 +137,8 @@ class _ArtPanel extends StatelessWidget {
                               ],
                             ),
                             textAlign: TextAlign.right,
-                            style: GoogleFonts.leagueSpartan(
+                            style: TextStyle(
+                              fontFamily: _display,
                               color: _textColour,
                               fontSize: headlineSize,
                               fontWeight: FontWeight.w700,
@@ -149,7 +153,6 @@ class _ArtPanel extends StatelessWidget {
                 ],
               ),
             ),
-
           ],
         );
       },
