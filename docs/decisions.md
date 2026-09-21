@@ -379,7 +379,9 @@ locally, so the image never leaves the device, with a mandatory review
 screen because OCR misreads drug names and a confidently wrong extraction is
 worse than none. Only *conditions* would be kept and used — reasoning about
 medication is outside what this application should do, however accurate the
-extraction.
+extraction. The initial plan was to use pytesseract to extract the texts and
+then using API to provide health analysis and do description which was later 
+dropped out as a decision while building.  
 
 **Onboarding prefill.** Not built, and now unnecessary. Onboarding is a
 first-run flow: a new account is sent there from the login screen, and
