@@ -318,19 +318,26 @@ The palette and typography did not change. Only the surfaces did.
 
 ---
 
-## 17. google_fonts, for now
+## 17. Bundled fonts
 
-**Decided:** to move quickly, with a known expiry.
+**Decided:** at the start for speed, revisited once the app was working.
 
 `google_fonts` fetches Archivo, IBM Plex Mono, League Spartan and Sacramento
-at runtime. That is four network round trips before text renders correctly,
-and it brought 28 transitive packages — mostly `path_provider` platform
-implementations that are dead weight on web.
+at runtime. That is four serial requests to Google's servers before text
+renders in the right face, and it made the app unusable offline.
 
-Bundling the `.ttf` files removes all of it and is the single biggest
-remaining load-time improvement. Deferred, not forgotten.
+The four families are now bundled as `.ttf` assets, with only the weights
+the theme actually asks for — eight files, around 850 KB. `google_fonts` and
+its 28 transitive packages are gone.
 
----
+**What it did not do:** the JavaScript bundle stayed at 2.9 MB. The
+expectation was that removing 28 packages would shrink it, and that was
+wrong — most of those were `path_provider` platform implementations that
+tree-shaking had already dropped from the web build. Recorded because the
+prediction was worth checking rather than assuming.
+
+**What it did do:** removed four blocking network requests from every load,
+and made the app work with no internet connection at all.
 
 ## 18. Token in a query string, for one endpoint
 
