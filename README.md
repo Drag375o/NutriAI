@@ -1,6 +1,6 @@
 # NutriAI
 
-**Eat well, on your terms 
+**Eat well, on your terms . 
 Your food, your goals, your data.**
 
 A cross-platform nutrition and health application with an AI coach. Users
